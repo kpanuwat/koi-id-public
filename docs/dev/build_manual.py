@@ -23,7 +23,7 @@ assert not bad, f'banned characters: {bad}'
 (D.parent / 'Koi_ID_Developer_Manual.html').write_text(out)
 print('wrote', D.parent / 'Koi_ID_Developer_Manual.html', len(out) // 1024, 'KB')
 # the same manual is the app's /about page, with a way back to the app
-about = out.replace('<header class="hero">', '<p class="meta"><a href="./">กลับไปที่แอป (back to the app)</a></p>\n<header class="hero">', 1)
+about = out.replace('<body>', '<body>\n<p class="meta" style="max-width:1200px;margin:12px auto 0;padding:0 16px"><a href="./">กลับไปที่แอป (back to the app)</a></p>', 1)
 assert about != out
 (D.parents[1] / 'app' / 'about.html').write_text(about)
 print('wrote app/about.html')

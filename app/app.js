@@ -16,7 +16,7 @@ const COUNT_ONLY = params.get('count') !== '0'; // the default since v0.064 (own
 // written, a fish the gallery does not know keeps a 2-digit hex for the session (StillSession)
 const COUNT_ID = COUNT_ONLY && params.get('id') === '1';
 let statusTimer; // declared first: status() can run before the rest of this module (e.g. no service worker)
-const BUILD = 'v0.066';
+const BUILD = 'v0.068';
 const SLOW_EMBED = params.get('slowAdapt') === '1'; // 'count' eases only the counting rules on slow devices // keep in step with CACHE in sw.js; sent with every field report
 
 // ---------- self-healing after a crash: the OS killing the tab (iPhone memory limit) leaves the stage it died in behind;
@@ -779,9 +779,10 @@ function stopAuto() {
 async function autoCount() {
   if (autoOn) return stopAuto();
   const g = ++autoGen; autoOn = true;
-  const h = +params.get('shotH') || 1080, warmN = +(params.get('autoWarm') ?? 8), keep = params.get('autoKeep') !== '0';
-  let rounds = 0, openMs = 0, countMs = 0, beatAt = performance.now();
-  report('auto', { step: 'on', keep, warmN });
+  // iPhone: 1280x720 (v0.065-v0.066 at 1080 were killed after 25-77 s, D1 1214-1238; the detector sees 320 px either way)
+  const h = +params.get('shotH') || (IOS ? 720 : 1080), warmN = +(params.get('autoWarm') ?? 8), keep = params.get('autoKeep') !== '0';
+  let rounds = 0, openMs = 0, countMs = 0, beatAt = performance.now(), c = null, cx = null;
+  report('auto', { step: 'on', keep, warmN, h });
   try {
     stop();
     // a video file picked before stays decoded in #video after stop(): with the camera on top the iPhone killed the
@@ -798,8 +799,9 @@ async function autoCount() {
         for (let i = 0; i < warmN && g === autoGen; i++) await nextFrame(autoCam);
       } else await nextFrame(autoCam);
       if (g !== autoGen || !autoCam.srcObject) break;
-      const c = new OffscreenCanvas(autoCam.videoWidth, autoCam.videoHeight);
-      c.getContext('2d').drawImage(autoCam, 0, 0, c.width, c.height);
+      // one canvas for the whole run: a new full-size one per round (~8/s) left GC to free them
+      if (!c || c.width !== autoCam.videoWidth || c.height !== autoCam.videoHeight) { c = new OffscreenCanvas(autoCam.videoWidth, autoCam.videoHeight); cx = c.getContext('2d'); }
+      cx.drawImage(autoCam, 0, 0, c.width, c.height);
       if (!keep) { autoCam.srcObject.getTracks().forEach(t => t.stop()); autoCam.srcObject = null; }
       const t1 = performance.now();
       await photoRun(c.transferToImageBitmap(), true);
