@@ -1,5 +1,5 @@
 // Offline cache + cross-origin isolation headers (lets onnxruntime use wasm threads).
-const CACHE = 'koi-id-v0.065';
+const CACHE = 'koi-id-v0.066';
 // models and the onnxruntime wasm (~140 MB on an iPhone) live in their own cache, named by a hash of their bytes, so a
 // code-only release does not download them again (the owner tests on mobile data). deploy.sh keeps the name current.
 const MODELS = 'koi-models-8308bccae246';

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="คู่มือระบบ Koi ID สำหรับนักพัฒนา (v0.064): สถาปัตยกรรม โหมดการทำงาน โมเดล API ฐานข้อมูล การทดสอบ และแผนงาน">
+<meta name="description" content="คู่มือระบบ Koi ID สำหรับนักพัฒนา (v0.066): สถาปัตยกรรม โหมดการทำงาน โมเดล API ฐานข้อมูล การทดสอบ และแผนงาน">
 <title>Koi ID: คู่มือระบบสำหรับนักพัฒนา (Developer Manual)</title>
 <style>
   :root{--bg:#f7f7f5;--card:#ffffff;--line:#e5e7eb;--ink:#1b2a22;--mute:#5b6660;--brand:#2B7051;--brand-soft:#e7f1ec;--zebra:#fafbf9;--head:#f2f4f1;--warn:#7a5f00;--warn-soft:#fff7d1;--bad:#b3261e;--bad-soft:#fbeceb;--code:#f5f7f4}
@@ -96,10 +96,10 @@
 <main>
 
 <header class="hero">
-  <p class="meta">คู่มือนักพัฒนา (developer manual) · ฉบับ v0.064 · commit 17bc76d · อัปเดต 1 พ.ย. 2026</p>
+  <p class="meta">คู่มือนักพัฒนา (developer manual) · ฉบับ v0.066 · อัปเดต 1 พ.ย. 2026 · เปิดอ่านในแอปที่ <a href="https://koi-id.pages.dev/about">koi-id.pages.dev/about</a></p>
   <h1>Koi ID: คู่มือระบบสำหรับนักพัฒนา<span class="en" style="display:block;font-size:15px;font-weight:400">Koi ID developer manual</span></h1>
-  <p>คู่มือนี้อธิบายระบบ Koi ID ตามสภาพที่ใช้งานได้จริงในวันนี้ เพื่อให้นักพัฒนาภายนอกรับช่วงต่อได้โดยไม่ต้องเดาจากประวัติการทำงาน แหล่งความจริงของสถานะคือ <code>HANDOFF.md</code> ส่วน CHECKPOINT ส่วนนี้เป็นภาพรวมที่อ้างอิงกลับไปยังโค้ดและบันทึกภาคสนาม ข้อความภาษาอังกฤษในวงเล็บคือคำค้นต่อในเว็บหรือในโค้ด ระบบมีแผนเปิดซอร์สภายใต้ใบอนุญาต Apache-2.0 ผ่านโฟลเดอร์ export ที่ <code>scripts/make_public.sh</code> สร้าง</p>
-  <p class="meta">ที่มาของข้อมูล: โค้ดที่ commit 17bc76d, บันทึก HANDOFF ณ 1 พ.ย. 2026, บันทึกภาคสนามจากตาราง D1 และรายงานทบทวนความปลอดภัย การทดสอบบน production ไม่ได้ทำขึ้นใหม่เพื่อเขียนคู่มือนี้</p>
+  <p>คู่มือนี้อธิบายระบบ Koi ID ตามสภาพที่ใช้งานได้จริงในวันนี้ เพื่อให้นักพัฒนาภายนอกรับช่วงต่อได้โดยไม่ต้องเดาจากประวัติการทำงาน แหล่งความจริงของสถานะคือ <code>HANDOFF.md</code> ส่วน CHECKPOINT ส่วนนี้เป็นภาพรวมที่อ้างอิงกลับไปยังโค้ดและบันทึกภาคสนาม ข้อความภาษาอังกฤษในวงเล็บคือคำค้นต่อในเว็บหรือในโค้ด ซอร์สโค้ดเปิดแล้วภายใต้ใบอนุญาต Apache-2.0 ที่ <a href="https://github.com/kpanuwat/koi-id-public">github.com/kpanuwat/koi-id-public</a> (โมเดลอยู่ใน GitHub Release <code>models-v0.064</code>) รีโพสาธารณะเป็นสำเนา (mirror) ที่สร้างจากรีโพภายในด้วย <code>scripts/make_public.sh</code> ทุกครั้งที่ออกเวอร์ชัน production deploy จากรีโพภายในเท่านั้น</p>
+  <p class="meta">ที่มาของข้อมูล: โค้ด v0.065 ถึง v0.066, บันทึก HANDOFF ณ 1 พ.ย. 2026, บันทึกภาคสนามจากตาราง D1 (อ่านอย่างเดียว ถึงแถว 1204) รายงานทบทวนความปลอดภัย และ HARDENING.md เลขบรรทัดในเอกสารอ้างอิงโค้ด ณ v0.066 ไฟล์ <code>HANDOFF.md</code>, <code>CLAUDE.md</code>, <code>docs/claude/</code> และ <code>pending/</code> อยู่ในรีโพภายในเท่านั้น ผู้ใช้รีโพสาธารณะใช้คู่มือนี้แทน</p>
   <div class="callout">
     <b>สัญลักษณ์สถานะ:</b>
     <span class="pill ok">ยืนยันแล้ว</span> ตรวจจากโค้ด commit หรือบันทึกที่อ้างได้ ·
@@ -121,17 +121,18 @@
 <tr><th>ส่วนของระบบ</th><th>สถานะ</th><th>หลักฐาน (evidence)</th></tr>
 <tr><td>วงจรนับต่อเนื่องด้วยกล้อง (autoCount, เก็บสตรีมไว้)</td><td><span class="pill ok">มั่นคงบน iPhone</span></td><td>1,471 รอบใน 3.5 นาที ไม่มีแท็บถูกฆ่า (D1 1178-1198, v63.27)</td></tr>
 <tr><td>นับจากวิดีโอไฟล์</td><td><span class="pill warn">เจ้าของระบบรายงานว่าเล่นได้</span></td><td>ยังไม่มี log ตัวเลขจาก iPhone บน VM ได้ 5-10 รอบต่อวินาที</td></tr>
-<tr><td>ปุ่มถ่ายภาพในโหมดเต็ม (?count=0)</td><td><span class="pill ok">รายงานว่ามั่นคง (รุ่นเก่า)</span></td><td>ประมาณ 30 รูปใน v63.15 ยังไม่ได้ทดสอบซ้ำกับ v63.27 หรือ v0.064</td></tr>
+<tr><td>ปุ่มถ่ายภาพในโหมดเต็ม (?count=0)</td><td><span class="pill ok">รายงานว่ามั่นคง (รุ่นเก่า)</span></td><td>ประมาณ 30 รูปใน v63.15 ยังไม่ได้ทดสอบซ้ำกับ v63.27 หรือ v0.06x</td></tr>
 <tr><td>เปิดกล้องใหม่ทุกรอบ (autoKeep=0)</td><td><span class="pill bad">ไม่มั่นคง</span></td><td>ตายหลัง 8-20 รอบ (D1 1169-1176, v63.26)</td></tr>
 <tr><td>กล้องสดแบบ realtime (?live=1)</td><td><span class="pill bad">ไม่มั่นคง</span></td><td>ตายที่ 1 รอบต่อวินาทีหลัง 15-25 วินาที (D1 1136-1156) ที่ 10 วินาทีต่อรอบอยู่ได้แต่นับไม่ถี่</td></tr>
 <tr><td>ระบุตัวปลาถาวร (?id=1)</td><td><span class="pill bad">ไม่มั่นคง</span></td><td>ตายหลัง 2-3 รูป (v63.24) และหลัง 4-5 รูป (v63.25, D1 944-989)</td></tr>
 <tr><td>โหมดเต็มบน iPhone (?count=0)</td><td><span class="pill bad">เสี่ยง</span></td><td>ใช้หน่วยความจำสูง (คอมเมนต์ใน models.js:9-10 ระบุพีคราว 1.8 GB) ใช้บนเดสก์ท็อปและ eval</td></tr>
+<tr><td>API หลังบ้าน (โควตาและการตรวจค่า v0.065)</td><td><span class="pill ok">ใช้งานจริงแล้ว</span></td><td>ตาราง quota ถูกสร้างเองบน production log จาก iPhone ของ v0.065 ผ่านโควตาได้ (D1 1202-1203) คำขอที่ไม่มีโทเคนได้ 401</td></tr>
 </table></div>
 
 <h3>1.3 เริ่มต้นใน 10 นาที <span class="en">Start in 10 minutes</span></h3>
 <ol>
-<li>อ่าน <code>HANDOFF.md</code> ส่วน CHECKPOINT และไดเรกทอรี <code>docs/claude/</code> (ทิศทางของเจ้าของระบบ)</li>
-<li>Clone รีโพจาก GitHub เข้าไปในโฟลเดอร์รีโพ แล้วรัน <code>./scripts/fetch_artifacts.sh</code> เพื่อดึงไฟล์ใหญ่ราว 580 MB จาก GitHub Release</li>
+<li>Clone รีโพสาธารณะ: <code>git clone https://github.com/kpanuwat/koi-id-public koi-id &amp;&amp; cd koi-id</code> แล้วอ่าน <code>README.md</code>, <code>SETUP.md</code> และคู่มือนี้ (<code>docs/Koi_ID_Developer_Manual.html</code> ฉบับเดียวกับหน้า /about ของแอป)</li>
+<li>ดึงโมเดล: <code>scripts/fetch_models.sh</code> โหลด <code>koi_yx320.onnx.part0</code> และ <code>embed.onnx.part0-2</code> (รวมราว 90 MB) จาก GitHub Release <code>models-v0.064</code> ลง <code>app/models/</code> และตรวจขนาดกับ <code>parts.json</code> (ทีมภายในใช้ <code>scripts/fetch_artifacts.sh</code> ซึ่งดึงไฟล์ใหญ่ทั้งหมดราว 580 MB จากรีโพภายใน)</li>
 <li>ติดตั้ง Node.js (v22 ขึ้นไป) และ Python 3.12 สำหรับโฟลเดอร์ <code>train/</code> ตามขั้นตอนใน <code>SETUP.md</code></li>
 <li>รันเซิร์ฟเวอร์ local: <code>cd app &amp;&amp; npx --yes http-server@14.1.1 -p 8766 -a 127.0.0.1 -c-1 -s</code></li>
 <li>เปิด http://127.0.0.1:8766/ (โหมดนับ) และ http://127.0.0.1:8766/?count=0 (โหมดเต็ม) บน Chrome เดสก์ท็อปก่อนเสมอ</li>
@@ -276,7 +277,7 @@
 
 <!-- ============================================================ 3 -->
 <h2 id="s3"><span class="no">3</span>โหมดการทำงานและสถานะ<span class="en">Modes and status</span></h2>
-<p>โหมดถูกเลือกจาก URL parameter ตอนเปิดหน้า ตารางนี้ใช้ตัดสินว่าจะทดสอบอะไร URL ตัวอย่างใช้โดเมนสาธารณะเพื่ออ้างอิงเท่านั้น และผลทดสอบในตารางเป็นของเวอร์ชันที่ระบุ ไม่ใช่ของ v0.064 เว้นแต่จะระบุไว้</p>
+<p>โหมดถูกเลือกจาก URL parameter ตอนเปิดหน้า ตารางนี้ใช้ตัดสินว่าจะทดสอบอะไร URL ตัวอย่างใช้โดเมนสาธารณะเพื่ออ้างอิงเท่านั้น และผลทดสอบในตารางเป็นของเวอร์ชันที่ระบุ ไม่ใช่ของ v0.066 เว้นแต่จะระบุไว้ ส่วนแอป (app/) ของ v0.064 และ v0.065 เหมือนกันยกเว้นหมายเลขเวอร์ชัน v0.066 เพิ่มการปล่อยไฟล์วิดีโอก่อนเปิดกล้อง และหน้า about.html</p>
 <div class="tw"><table>
 <tr><th>โหมด (mode)</th><th>URL ตัวอย่าง</th><th>โมเดล (model)</th><th>สถานะ (status)</th><th>หลักฐาน (evidence)</th></tr>
 <tr><td>นับต่อเนื่องด้วยกล้อง (ค่าเริ่มต้น)</td><td><code>https://koi-id.pages.dev/</code></td><td>koi_yx320 (YOLOX-tiny, 320 px)</td><td><span class="pill ok">มั่นคงบน iPhone</span></td><td>v63.27: 1,471 รอบใน 3.5 นาที ไม่ถูกฆ่า (D1 1178-1198)</td></tr>
@@ -413,7 +414,11 @@
 <tr><td>ก่อน v63.26</td><td>ไม่ระบุเวอร์ชันในบันทึก</td><td>กล้องสด 1 รอบต่อวินาที (passEvery=1000)</td><td>ตายห้าครั้งภายใน 15-25 วินาที</td><td>D1 1136-1156</td></tr>
 <tr><td>1 พ.ย.</td><td>v63.26</td><td>รอบต่อเนื่อง แต่เปิดกล้องใหม่ทุกรอบ</td><td>ตายหลัง 8-20 รอบ</td><td>D1 1169-1176</td></tr>
 <tr><td>1 พ.ย.</td><td>v63.27</td><td>เก็บสตรีมกล้องไว้ (ค่าเริ่มต้น)</td><td>1,471 รอบใน 3.5 นาที ไม่ถูกฆ่า หยุดโดยเจ้าของระบบ</td><td>D1 1178-1198, tag checkpoint-count-cam</td></tr>
-<tr><td>1 พ.ย.</td><td>v0.064</td><td>โหมดนับเป็นค่าเริ่มต้น</td><td>ยังไม่มีผลทดสอบบน iPhone</td><td>commit 17bc76d</td></tr>
+<tr><td>1 พ.ย.</td><td>v0.064</td><td>โหมดนับเป็นค่าเริ่มต้น (ตัด ?count=1)</td><td>ไม่มีผลรอบนับบน iPhone แยก</td><td>commit 17bc76d</td></tr>
+<tr><td>1 พ.ย.</td><td>v0.065</td><td>API มีโควตาต่ออุปกรณ์ จำกัดขนาด และตรวจค่า (หัวข้อ 9.6)</td><td>iPhone เปิดแอปได้ log ผ่านโควตา ยังไม่มี event auto (ยังไม่ได้เปิดรอบนับ)</td><td>D1 1202-1204</td></tr>
+<tr><td>1 พ.ย.</td><td>v0.065</td><td>เล่นไฟล์วิดีโอ กดหยุด แล้วกดกล้องทันที</td><td>ถูกฆ่าหลังเปิดกล้อง 11 วินาที ไฟล์ยังค้างอยู่ใน #video เพราะ stop() แค่ pause</td><td>D1 1205-1214</td></tr>
+<tr><td>1 พ.ย.</td><td>v0.065</td><td>หลังถูกฆ่า เปิดหน้าใหม่แล้วใช้กล้องอย่างเดียว (safe 2)</td><td>ได้ราว 100 รอบใน 15 วินาที (123-129 ms ต่อรอบ) แล้วถูกฆ่าภายใน 17-32 วินาที สองครั้ง ยังไม่รู้สาเหตุ โค้ดนับเหมือน checkpoint ทุกบรรทัด</td><td>D1 1214-1224</td></tr>
+<tr><td>1 พ.ย.</td><td>v0.066</td><td>autoCount ปล่อยไฟล์วิดีโอก่อนเปิดกล้อง และหน้า /about เป็นคู่มือฉบับนี้</td><td>ทดสอบบน VM ผ่าน (ไฟล์ หยุด กล้อง: readyState 0 รอบนับทำงาน) รอผลบน iPhone</td><td>app.js autoCount</td></tr>
 </table></div>
 
 <figure>
@@ -486,7 +491,7 @@
 <tr><td>R5</td><td>โหมดนับไม่โหลด embedder หรือโมเดลที่สองบน WebGPU</td><td>สองโมเดลบน GPU ของ iPhone เพิ่มหน่วยความจำ (ยังไม่ได้วัดแยก)</td></tr>
 <tr><td>R6</td><td>ก่อนอ้างว่าแก้หน่วยความจำได้ ต้องวัดด้วย footprint probe ไม่ใช่ดูว่า "ไม่ตาย" ครั้งเดียว</td><td>หลักฐานต้องวัดซ้ำได้</td></tr>
 <tr><td>R7</td><td>ใช้ event <code>auto</code> (beat ทุก 15 วินาที) เป็นหลักฐานหลักของโหมดนับ</td><td>โหมดนับไม่ส่ง event photo รายรอบ</td></tr>
-<tr><td>R8</td><td>ตัวเลขบน iPhone ทั้งหมดในเอกสารนี้มาจาก v63.x ต้องทดสอบ v0.064 ก่อนอ้าง</td><td>ยังไม่มีผลทดสอบบนโทรศัพท์ของ v0.064</td></tr>
+<tr><td>R8</td><td>ตัวเลขรอบนับที่มั่นคงบน iPhone มาจาก v63.27 ส่วน v0.065 ถูกฆ่าในรอบนับสองครั้งหลัง crash ครั้งแรก (D1 1214-1224)</td><td>ทดสอบ v0.066 จากแท็บใหม่ก่อนสรุป</td></tr>
 </table></div>
 
 <!-- ============================================================ 6 -->
@@ -553,7 +558,7 @@
 <h3>7.4 แคชของ service worker <span class="en">Service worker caches</span></h3>
 <div class="tw"><table>
 <tr><th>แคช</th><th>ชื่อ</th><th>เก็บอะไร</th><th>วิธีอ่าน</th></tr>
-<tr><td>CACHE</td><td><code>koi-id-v0.064</code></td><td>โค้ดและ SHELL เช่น index.html และ app.js</td><td>network first ถ้าไม่ได้จึงใช้แคช</td></tr>
+<tr><td>CACHE</td><td><code>koi-id-v0.066</code></td><td>โค้ดและ SHELL เช่น index.html และ app.js</td><td>network first ถ้าไม่ได้จึงใช้แคช</td></tr>
 <tr><td>MODELS</td><td><code>koi-models-8308bccae246</code></td><td>.onnx, .wasm และ .partN</td><td>cache first ไม่สนใจ query string</td></tr>
 <tr><td>แคชเก่า</td><td><code>koi-id-v63.2</code>, <code>koi-id-v63.3</code>, <code>koi-models-20cfd7c3df46</code></td><td>คัดลอกไป MODELS เมื่อ bytes ตรงกัน</td><td>ตอน install</td></tr>
 <tr><td>koi-last-video</td><td><code>koi-last-video</code></td><td>วิดีโอล่าสุดเพื่อเล่นต่อ (ไม่เกิน 30 MB บน iOS และ 300 MB บนแพลตฟอร์มอื่น)</td><td>activate ไม่ลบ</td></tr>
@@ -621,20 +626,20 @@
 <h2 id="s9"><span class="no">9</span>ระบบหลังบ้าน<span class="en">Backend: API, D1, logs</span></h2>
 
 <h3>9.1 เส้นทาง API <span class="en">Routes</span></h3>
-<p>API อยู่ภายใต้ <code>/api/*</code> ใน <code>functions/api/[[path]].js</code> ยกเว้น enroll ทุกเส้นทางตรวจโทเคนก่อน เส้นทางที่ไม่รู้จักตอบ 404 หลังผ่านการตรวจ ข้อผิดพลาดตอบ 400 พร้อมข้อความไม่เกิน 200 ตัวอักษร</p>
+<p>API อยู่ภายใต้ <code>/api/*</code> ในไฟล์เดียว <code>functions/api/[[path]].js</code> (320 บรรทัด) ทุกคำขอเริ่มด้วย <code>schema()</code> (สร้างตาราง blobs และ quota ถ้ายังไม่มี) และ <code>cleanup()</code> ชั่วโมงละครั้ง ยกเว้น enroll ทุกเส้นทางตรวจโทเคนก่อน เกินโควตาได้ 429 ข้อมูลใหญ่เกินได้ 413 ข้อผิดพลาดภายในไม่ส่งข้อความ SQL กลับ (ได้ <code>bad json</code> 400 หรือ <code>request failed</code> 500) เส้นทางที่ไม่รู้จักตอบ 404</p>
 <div class="tw"><table>
-<tr><th>วิธี</th><th>เส้นทาง</th><th>สิทธิ์</th><th>อ่านหรือเขียน</th><th>บรรทัด</th></tr>
-<tr><td>POST</td><td><code>/api/enroll</code></td><td>ไม่ต้องมีโทเคน (จำกัดอัตรา)</td><td>ลงทะเบียนอุปกรณ์ เก็บเฉพาะแฮชของโทเคน ได้โทเคนรูปแบบ <code>d.&lt;id&gt;.&lt;secret&gt;</code> จำกัด 10 อุปกรณ์ใหม่ต่อแฮช IP ต่อวัน</td><td>84-94</td></tr>
-<tr><td>GET</td><td><code>/api/ping</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>ตรวจว่าโทเคนใช้ได้ ตอบ ok</td><td>98</td></tr>
-<tr><td>GET</td><td><code>/api/me</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>ตอบจำนวนวันที่ใช้งาน (days) และสิทธิ์ admin</td><td>114</td></tr>
-<tr><td>PUT</td><td><code>/api/blob/&lt;part&gt;?key=&amp;type=</code></td><td>ผู้ดูแลเท่านั้น (ไม่ใช่ผู้ดูแลได้ 403)</td><td>เขียนบล็อบ key ต้องขึ้นต้นด้วย <code>ponds/&lt;id&gt;/</code> แต่ละส่วนไม่เกิน 1 MB</td><td>100-108</td></tr>
-<tr><td>POST</td><td><code>/api/log</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>เพิ่มแถวใน logs ตัด body ที่ 4096 ตัวอักษร</td><td>109-113</td></tr>
-<tr><td>GET</td><td><code>/api/ponds</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>รายการบ่อ เรียงตาม updated_at</td><td>122-125</td></tr>
-<tr><td>GET</td><td><code>/api/pond/&lt;id&gt;?since=</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>ข้อมูลบ่อและคลังปลา ถ้า since ตรงกับ ver จะได้ gallery เป็น null</td><td>126-133</td></tr>
-<tr><td>PUT</td><td><code>/api/pond/&lt;id&gt;</code></td><td>อุปกรณ์หรือผู้ดูแล มีกติกาเพิ่มเติม</td><td>บันทึกคลังแบบ compare-and-swap ตาม base เก็บ 30 เวอร์ชัน ห้ามลด nextFish อุปกรณ์ที่ยังไม่ครบ 3 วันห้ามลบปลาเกิน max(3, 20%)</td><td>134-162</td></tr>
-<tr><td>POST</td><td><code>/api/pond/&lt;id&gt;/merge</code></td><td>อุปกรณ์หรือผู้ดูแล (ดูข้อ 9.6)</td><td>ตั้ง merged_into ให้บ่อ ตอบ 409 ถ้าปลายทางไม่มีหรือถูกรวมไปแล้ว</td><td>115-121</td></tr>
-<tr><td>POST</td><td><code>/api/sample</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>ตัวอย่างปลา (meta JSON และภาพ jpeg/png ไม่เกิน 2 MB) เกรดทองถูกปรับเป็นเงินสำหรับอุปกรณ์ที่ยังไม่ครบ 3 วัน</td><td>164-179</td></tr>
-<tr><td>POST</td><td><code>/api/frame</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>เฟรม (ภาพ และ dets JSON ไม่เกิน 8 MB)</td><td>180-194</td></tr>
+<tr><th>วิธี</th><th>เส้นทาง</th><th>สิทธิ์</th><th>อ่านหรือเขียน และขีดจำกัด</th><th>บรรทัด</th></tr>
+<tr><td>POST</td><td><code>/api/enroll</code></td><td>ไม่ต้องมีโทเคน</td><td>ลงทะเบียนอุปกรณ์ เก็บเฉพาะแฮชของโทเคน ได้โทเคน <code>d.&lt;id&gt;.&lt;secret&gt;</code> จำกัด 10 อุปกรณ์ใหม่ต่อแฮช IP ต่อวัน และ 300 อุปกรณ์ใหม่ต่อวันรวมทั้งระบบ body ไม่เกิน 1 KB</td><td>164-176</td></tr>
+<tr><td>GET</td><td><code>/api/ping</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>ตรวจว่าโทเคนใช้ได้ ตอบ ok</td><td>181</td></tr>
+<tr><td>PUT</td><td><code>/api/blob/&lt;part&gt;?key=&amp;type=</code></td><td>ผู้ดูแลเท่านั้น (อื่นได้ 403)</td><td>เขียนบล็อบ key ต้องขึ้นต้นด้วย <code>ponds/&lt;id&gt;/</code> แต่ละส่วนไม่เกิน 1 MB</td><td>183-191</td></tr>
+<tr><td>POST</td><td><code>/api/log</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>เพิ่มแถวใน logs body ไม่เกิน 4096 ตัวอักษร (413) 1,000 แถวต่ออุปกรณ์ต่อวัน</td><td>192-201</td></tr>
+<tr><td>GET</td><td><code>/api/me</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>ตอบจำนวนวันที่ใช้งาน (days) และ admin</td><td>202</td></tr>
+<tr><td>POST</td><td><code>/api/pond/&lt;id&gt;/merge</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>ตั้ง merged_into ให้บ่อ ตอบ 409 ถ้าปลายทางไม่มีหรือถูกรวมไปแล้ว 10 ครั้งต่ออุปกรณ์ต่อวัน</td><td>203-210</td></tr>
+<tr><td>GET</td><td><code>/api/ponds</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>รายการบ่อทั้งหมด (id, name, lat, lon, fish, updated_at, merged_into) ทุกอุปกรณ์เห็นทุกบ่อ</td><td>211-214</td></tr>
+<tr><td>GET</td><td><code>/api/pond/&lt;id&gt;?since=</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>ข้อมูลบ่อและคลังปลา ถ้า since ตรงกับ ver จะได้ gallery เป็น null</td><td>216-222</td></tr>
+<tr><td>PUT</td><td><code>/api/pond/&lt;id&gt;</code></td><td>อุปกรณ์หรือผู้ดูแล มีกติกาเพิ่ม</td><td>บันทึกคลังแบบ compare-and-swap ตาม base ตรวจรูปร่างคลัง nextFish ห้ามลดและห้ามกระโดดเกิน +1000 ชื่อและพิกัดตั้งได้ครั้งเดียว (ยกเว้นผู้ดูแล) อุปกรณ์อายุน้อยกว่า 3 วันลบปลาได้ไม่เกิน max(3, 20%) ต่อบ่อต่อวัน 1,500 ครั้งต่อวัน 300 ครั้งต่อชั่วโมง บ่อใหม่ 20 บ่อต่อวัน</td><td>223-266</td></tr>
+<tr><td>POST</td><td><code>/api/sample</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>ตัวอย่างปลา (meta JSON และภาพไม่เกิน 2 MB) 3,000 ชิ้นและ 100 MB ต่ออุปกรณ์ต่อวัน แถวผูกกับอุปกรณ์ที่ยืนยันตัวแล้ว แก้ได้เฉพาะของตัวเอง เกรดทองถูกปรับเป็นเงินสำหรับอุปกรณ์อายุน้อยกว่า 3 วัน</td><td>274-293</td></tr>
+<tr><td>POST</td><td><code>/api/frame</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>เฟรม (ภาพไม่เกิน 2 MB และ dets ไม่เกิน 256 KB) 300 เฟรมและ 150 MB ต่ออุปกรณ์ต่อวัน ภาพของ sample กับ frame รวมทุกอุปกรณ์ไม่เกิน 300 MB ต่อวัน</td><td>294-312</td></tr>
 </table></div>
 
 <h3>9.2 การยืนยันตัวตน <span class="en">Authentication</span></h3>
@@ -652,13 +657,14 @@
 <tr><td>frames</td><td>0001, 0002</td><td>id, pond, w, h, at, session, device, quality, img_key, dets_key</td><td>index frames_pond (pond, at)</td></tr>
 <tr><td>devices</td><td>0004</td><td>id, token_hash, ip_hash, created, seen, days</td><td>ไม่เก็บโทเคนดิบ</td></tr>
 <tr><td>logs</td><td>0006</td><td>id (AUTOINCREMENT), device, at, ev, data</td><td>at เป็น Unix milliseconds จาก Date.now() ฝั่งเซิร์ฟเวอร์</td></tr>
-<tr><td>gallery_keys</td><td>0008</td><td>pond, ver, key</td><td>ประวัติคีย์ของคลัง</td></tr>
+<tr><td>gallery_keys</td><td>0008, 0010</td><td>pond, ver, key, device, at</td><td>ประวัติคีย์ของคลัง prune() เก็บ 30 เวอร์ชันล่าสุด 2 เวอร์ชันล่าสุดของแต่ละอุปกรณ์ (50 อุปกรณ์ 30 วัน) และวันละ 1 เวอร์ชันย้อนหลัง 14 วัน</td></tr>
 <tr><td>blobs</td><td>0009</td><td>key, part, type, data (BLOB), at</td><td>PK (key, part) แทน R2 ที่ยกเลิกเมื่อ 30 ต.ค.</td></tr>
+<tr><td>quota</td><td>0010</td><td>who, kind, win, n, bytes, at</td><td>ตัวนับโควตา who เป็น id อุปกรณ์หรือ * (รวมทั้งระบบ) win เป็นวัน UTC (หรือชั่วโมงสำหรับ puth) ลบแถวที่เก่ากว่า 3 วัน</td></tr>
 </table></div>
-<p>ตาราง blobs ถูกสร้างตอนรันด้วย <code>CREATE TABLE IF NOT EXISTS</code> ที่ functions บรรทัด 77-83 ซึ่งตรงกับ migration 0009 รูปแบบคีย์ของบล็อบที่ใช้อยู่: <code>ponds/&lt;pond&gt;/gallery.json</code> (ver 0), <code>gallery-v&lt;ver&gt;-&lt;8 hex&gt;.json</code> (การเขียนปัจจุบัน), <code>ponds/&lt;pond&gt;/samples/&lt;id&gt;.jpg</code> และ <code>ponds/&lt;pond&gt;/frames/&lt;id&gt;.jpg</code> กับ <code>.json</code> ส่วน <code>ponds.gkey</code> และ <code>gallery_keys.key</code> ชี้ไปยังคีย์เหล่านี้</p>
+<p>ตาราง blobs และ quota กับคอลัมน์ device, at ของ gallery_keys ถูกสร้างตอนรันโดย <code>schema()</code> (functions บรรทัด 139-150) ซึ่งตรงกับ migration 0009 และ 0010 เหตุผลคือโทเคนของเครื่องมือเขียน D1 ไม่ได้ เมื่อติดตั้งเองบน Cloudflare ของตัวเองจะใช้ migration หรือปล่อยให้ API สร้างก็ได้ รูปแบบคีย์ของบล็อบที่ใช้อยู่: <code>ponds/&lt;pond&gt;/gallery.json</code> (ver 0), <code>gallery-v&lt;ver&gt;-&lt;8 hex&gt;.json</code> (การเขียนปัจจุบัน), <code>ponds/&lt;pond&gt;/samples/&lt;id&gt;.jpg</code> และ <code>ponds/&lt;pond&gt;/frames/&lt;id&gt;.jpg</code> กับ <code>.json</code> ส่วน <code>ponds.gkey</code> และ <code>gallery_keys.key</code> ชี้ไปยังคีย์เหล่านี้</p>
 
 <h3>9.4 Log ภาคสนาม <span class="en">Field logs</span></h3>
-<p>ทุกการเรียก <code>report(ev, extra)</code> รวมข้อมูล diag (build, qs, ua, gpu, coi, ios, safe, crashedAt และอื่น ๆ) แล้วส่ง <code>POST /api/log</code> เฉพาะเมื่อมีโทเคนอุปกรณ์และไม่ได้เปิด dump จำกัดไม่เกิน 41 รายการต่อการโหลดหน้า และ body ไม่เกิน 4096 ตัวอักษร ถ้าเกินจะได้ 400 และถูกทิ้งอย่างเงียบ ๆ</p>
+<p>ทุกการเรียก <code>report(ev, extra)</code> รวมข้อมูล diag (build, qs, ua, gpu, coi, ios, safe, crashedAt และอื่น ๆ) แล้วส่ง <code>POST /api/log</code> เฉพาะเมื่อมีโทเคนอุปกรณ์และไม่ได้เปิด dump จำกัดไม่เกิน 41 รายการต่อการโหลดหน้า body ไม่เกิน 4096 ตัวอักษร (เกินได้ 413) และเซิร์ฟเวอร์รับไม่เกิน 1,000 แถวต่ออุปกรณ์ต่อวัน (เกินได้ 429) ทั้งสองกรณีถูกทิ้งอย่างเงียบ ๆ ฝั่งแอป Log เก่ากว่า 90 วันถูกลบอัตโนมัติ</p>
 <div class="tw"><table>
 <tr><th>ev</th><th>ส่งเมื่อ</th><th>ฟิลด์สำคัญ</th></tr>
 <tr><td>auto</td><td>เปิด (on) ทุก beat ทุก 15 วินาที ปิด (off) และ fail</td><td>step, keep, warmN, rounds, openMs (เฉลี่ย), countMs (เฉลี่ย), n</td></tr>
@@ -687,8 +693,19 @@
 </table></div>
 <p>กลไกกู้ตัวเอง (safe ladder) ทำงานดังนี้: ถ้า <code>koi.stage</code> ยังค้างตอนเปิดหน้า แปลว่ารอบก่อนตาย ระดับ safe จะเพิ่มขึ้น ถ้ารัน 60 วินาทีขึ้นไปติดกันสามครั้ง ระดับจะลดลงหนึ่ง และเมื่อ BUILD เปลี่ยน ระดับจะรีเซ็ตเป็น 0 ทำให้รอบแรกของ build ใหม่อาจตายซ้ำได้</p>
 
-<h3>9.6 ความปลอดภัยและสิ่งที่ต้องทำก่อนเปิดกว้าง <span class="en">Security before wider use</span></h3>
-<p>Backend ยังไม่พร้อมสำหรับการใช้งานวงกว้างหรือการเปิดซอร์ส รายงาน <code>docs/public/SECURITY_REVIEW.md</code> (1 พ.ย. 2026) ระบุประเด็นระดับสูงและกลางที่ต้องแก้ก่อน ได้แก่ การควบคุมการเข้าถึงรายบ่อ โควตาการใช้งาน การรวมบ่อ และความเป็นส่วนตัวของข้อมูลพิกัดกับข้อมูลอุปกรณ์ เอกสารนี้ไม่ลงรายละเอียดวิธีการโจมตี ให้อ่านรายงานต้นฉบับก่อนแตะ API หรือเปิดสิทธิ์ใหม่ (ดูหัวข้อ 12 ข้อ 4)</p>
+<h3>9.6 ความปลอดภัย โควตา และสิ่งที่ยังเปิดอยู่ <span class="en">Security, quotas, open items</span></h3>
+<p>v0.065 (1 พ.ย. 2026) แก้ API ตามรายงาน <code>docs/public/SECURITY_REVIEW.md</code> ภายใต้การตัดสินใจของเจ้าของระบบว่า <b>ไม่มีระบบ admin และให้ระบบทำงานเองทั้งหมด (fully autonomous)</b> จึงเพิ่มเฉพาะขีดจำกัด การตรวจขนาด และการตรวจค่า ทั้งหมดตรวจที่เซิร์ฟเวอร์ แอปไม่ต้องแก้ เพราะ syncNow ลองใหม่เองในรอบถัดไปเมื่อได้ 429 รายละเอียดเต็มอยู่ใน <code>docs/public/HARDENING.md</code> และทดสอบด้วย <code>scripts/api_limits_test.sh</code> กับ <code>wrangler pages dev</code> แบบ local</p>
+<div class="tw"><table>
+<tr><th>ชนิด</th><th>ขีดจำกัดต่ออุปกรณ์ต่อวัน UTC</th><th>การใช้งานปกติที่ต้องรองรับ</th></tr>
+<tr><td>log</td><td>1,000 แถว body 4 KB</td><td>ไม่เกิน 41 ต่อการโหลดหน้า</td></tr>
+<tr><td>sample</td><td>3,000 ชิ้น 100 MB ภาพ 2 MB</td><td>เครื่องเก็บไม่เกิน 3,000 ชิ้น</td></tr>
+<tr><td>frame</td><td>300 เฟรม 150 MB dets 256 KB</td><td>1 เฟรมต่อ 10 วินาทีขณะรัน</td></tr>
+<tr><td>บันทึกคลัง (PUT pond)</td><td>1,500 ต่อวัน 300 ต่อชั่วโมง</td><td>ราว 1 ครั้งต่อ 15-30 วินาที</td></tr>
+<tr><td>บ่อใหม่ / รวมบ่อ</td><td>20 / 10</td><td>บ่อใหม่เกิดเมื่อย้ายไปพิกัดใหม่ การรวมเกิดไม่บ่อย</td></tr>
+<tr><td>รวมทั้งระบบ</td><td>ภาพ sample + frame 300 MB อุปกรณ์ใหม่ 300 เครื่อง</td><td>โทรศัพท์ไม่กี่เครื่อง</td></tr>
+</table></div>
+<p>ค่าขีดจำกัดอยู่ที่ <code>LIMITS</code> และ <code>GLOBAL</code> (functions บรรทัด 30-39) โทเคนผู้ดูแลไม่มีขีดจำกัด ปรับค่าได้โดยไม่ต้องแก้ตาราง</p>
+<div class="callout warn"><b>สิ่งที่ยังไม่แก้ตามการตัดสินใจของเจ้าของระบบ:</b> (1) ใครก็ลงทะเบียนอุปกรณ์ได้ และอุปกรณ์ใดก็อ่านและเขียนคลังของทุกบ่อได้ (ไม่มีเจ้าของบ่อ) (2) ทุกอุปกรณ์เห็นชื่อและพิกัดบ่อที่ปัดเศษ 3 ตำแหน่ง (ราว 110 m) (3) อุปกรณ์ใดก็รวมบ่อได้ภายในโควตา ผู้ที่จะใช้ในวงกว้างควรเพิ่มเจ้าของหรือสมาชิกของบ่อ และ WAF rate limit บน <code>/api/*</code> ก่อน (หัวข้อ 12)</div>
 
 <!-- ============================================================ 10 -->
 <h2 id="s10"><span class="no">10</span>วิธีพัฒนา ทดสอบ deploy และ UAT<span class="en">Develop, test, deploy, UAT</span></h2>
@@ -790,6 +807,29 @@
 <p>การเปลี่ยนแปลงที่กระทบการตรวจจับ การติดตาม หรือการนับ ต้องรัน eval ก่อนและหลังด้วย stride 10 และ 30 กับโมเดล lite16 ตามกติกาของโปรเจกต์ โหมดนับเป็นค่าเริ่มต้นตั้งแต่ v0.064 จึงต้องใส่ <code>--qs=count=0</code> ถ้าต้องการวัดโหมดเต็ม ตัวเลข eval ของโหมดนับหลังเปลี่ยนค่าเริ่มต้นยังไม่ได้วัด (ดูหัวข้อ 12)</p>
 <p class="meta">ค่าตั้งต้นของคำสั่งใน SETUP.md ยังไม่มี <code>count=0</code> ดังนั้นคำสั่งนั้นจะได้โหมดนับ</p>
 
+<h3>10.4 ติดตั้งบน Cloudflare ของตัวเอง <span class="en">Deploy your own instance</span></h3>
+<p>รีโพสาธารณะมี <code>wrangler.toml</code> ที่ database_id ถูกแทนด้วยค่าว่าง ทำตามลำดับนี้ด้วยบัญชี Cloudflare ของตัวเอง (free tier พอ) รายละเอียดอยู่ใน <code>SETUP.md</code> ข้อ 5</p>
+<pre><code>npx wrangler@4 login
+npx wrangler@4 d1 create koi-id                 # ใส่ database_id ที่ได้ลงใน wrangler.toml
+for f in migrations/*.sql; do npx wrangler@4 d1 execute koi-id --remote --file "$f"; done
+npx wrangler@4 pages project create koi-id --production-branch main
+openssl rand -hex 24 | npx wrangler@4 pages secret put SYNC_TOKEN --project-name koi-id
+KOI_PROJECT=koi-id ./deploy.sh</code></pre>
+<ul>
+<li>แอปใช้ได้โดยไม่มี backend: โหมดนับทำงานในเครื่องทั้งหมด ถ้าเปิดด้วย http-server ธรรมดา คำขอ <code>/api/*</code> จะล้มและถูกเพิกเฉย (ไม่มี log ไม่มีการซิงก์)</li>
+<li>SYNC_TOKEN คือโทเคนผู้ดูแล ใช้กับเครื่องมือเท่านั้น ห้ามใส่ในเบราว์เซอร์หรือ commit</li>
+<li>ทดสอบ API แบบ local: <code>scripts/api_limits_test.sh</code> เปิด <code>wrangler pages dev app</code> บน 127.0.0.1 พร้อม D1 ชั่วคราวและ SYNC_TOKEN สุ่ม แล้วยิงทดสอบโควตา</li>
+</ul>
+
+<h3>10.5 ออกเวอร์ชันและอัปเดตรีโพสาธารณะ <span class="en">Release and public mirror</span></h3>
+<ol>
+<li>เวอร์ชันเป็นเลขรัน v0.064, v0.065, v0.066 ... แก้ <code>BUILD</code> ใน <code>app/app.js</code> และ <code>CACHE</code> ใน <code>app/sw.js</code> ให้ตรงกัน</li>
+<li>ทดสอบ local แล้ว <code>./deploy.sh</code> ตามด้วย UAT (ไม่เขียนข้อมูล ใช้ dump=1) แล้วให้เจ้าของระบบลองบน iPhone และอ่าน log D1</li>
+<li>รีโพภายใน: <code>scripts/make_public.sh ../koi-id-public</code> สร้างสำเนาที่ตัดข้อมูลส่วนตัวและไฟล์วิจัยออก ถ้าพบชื่อหรือเส้นทางส่วนตัวสคริปต์จะหยุด</li>
+<li>ใน <code>../koi-id-public</code>: <code>git add -A &amp;&amp; git commit</code> ด้วยอีเมล noreply ของ GitHub แล้ว <code>git push</code></li>
+<li>ถ้าโมเดลเปลี่ยน ให้สร้าง GitHub Release ใหม่ (<code>models-vX</code>) อัปโหลดไฟล์ .partN และแก้ TAG ใน <code>public/scripts/fetch_models.sh</code></li>
+</ol>
+
 <!-- ============================================================ 11 -->
 <h2 id="s11"><span class="no">11</span>กฎและกับดัก<span class="en">Rules and traps</span></h2>
 <p>รายการนี้รวบรวมจาก CLAUDE.md, HANDOFF.md, SETUP.md และโค้ด ข้อที่ระบุบรรทัดเป็นข้อที่ตรวจในโค้ดแล้ว ข้ออื่นมาจากบันทึกเดิม</p>
@@ -806,9 +846,9 @@
 <tr><td>9</td><td>eval: ห้ามแก้ app/ ขณะ eval ทำงาน และ eval จะล้มหลัง 60 วินาทีถ้า root ผิด</td><td>รอให้ eval จบ</td><td>eval_app.py:44-45</td></tr>
 <tr><td>10</td><td>eval_app.py ส่ง <code>dump=1</code> จึงไม่มี log และไม่ลงทะเบียนอุปกรณ์</td><td>ใช้ UAT กับ log ของ production แทน</td><td>eval_app.py:34, app.js:40</td></tr>
 <tr><td>11</td><td>ระบบกู้ตัวเอง: <code>koi.stage</code> ค้างหมายถึงรอบก่อนตาย ระดับ safe จะเพิ่ม และ BUILD ใหม่รีเซ็ตเป็น 0 รอบแรกของ build ใหม่อาจตายซ้ำ</td><td>อ่าน log ของรอบแรกก่อนสรุป</td><td>app.js:27-32</td></tr>
-<tr><td>12</td><td>หมายเลขปลาห้ามนำกลับมาใช้ เซิร์ฟเวอร์ปฏิเสธคลังที่ nextFish ลดลง (409) และอุปกรณ์ที่ยังไม่ครบ 3 วันที่ลบปลาจำนวนมาก (403)</td><td>ห้ามลบกติกานี้ออก</td><td>functions:144, 147-148</td></tr>
+<tr><td>12</td><td>หมายเลขปลาห้ามนำกลับมาใช้ เซิร์ฟเวอร์ปฏิเสธคลังที่ nextFish ลดลง (409) และอุปกรณ์ที่ยังไม่ครบ 3 วันที่ลบปลาจำนวนมาก (403)</td><td>ห้ามลบกติกานี้ออก</td><td>functions:234-246</td></tr>
 <tr><td>13</td><td>การรวมบ่อที่ตอบ unchanged โดยไม่มีคลัง เคยทำให้เลขปลาในบ่อสลับ</td><td>ห้ามลบการดึงคลังใหม่ฝั่ง client และการปฏิเสธ nextFish ย้อนหลังฝั่งเซิร์ฟเวอร์</td><td>HANDOFF, app.js pullPonds, syncGallery</td></tr>
-<tr><td>14</td><td>body ของ log ถูกตัดที่ 4096 ตัวอักษรก่อน JSON.parse ถ้ายาวกว่านั้นได้ 400 และถูกทิ้งเงียบ ๆ</td><td>ส่ง log ให้สั้น</td><td>functions:110, app.js:40</td></tr>
+<tr><td>14</td><td>body ของ log ยาวเกิน 4096 ตัวอักษรได้ 413 และเกิน 1,000 แถวต่อวันได้ 429 ทั้งคู่ถูกทิ้งเงียบ ๆ</td><td>ส่ง log ให้สั้น ใช้ beat</td><td>functions:192-201, app.js:40</td></tr>
 <tr><td>15</td><td>log ต่อการโหลดหน้าไม่เกิน 41 รายการ</td><td>ใช้ beat แทน event รายรอบ</td><td>app.js:40</td></tr>
 <tr><td>16</td><td>deploy.sh หยุดเมื่อแฮชโมเดลเปลี่ยน ต้อง commit sw.js แล้วรันใหม่</td><td>ทำตามข้อความที่สคริปต์แสดง</td><td>deploy.sh:12-15</td></tr>
 <tr><td>17</td><td>deploy.sh ใช้ <code>--commit-dirty=true</code> จึงส่งไฟล์ที่ยังไม่ commit ขึ้นไปด้วย</td><td>commit ก่อน deploy หรือรู้ว่ากำลังส่งอะไร</td><td>deploy.sh:19</td></tr>
@@ -823,8 +863,11 @@
 <tr><td>26</td><td>การพัฒนาตัวเองรายสัปดาห์ถูกปิดไว้ตั้งแต่ 26 ต.ค. แต่ auto_evolve.sh ยังอยู่ที่รากรีโพ</td><td>อย่าเปิด launchd โดยไม่ตรวจ</td><td>HANDOFF</td></tr>
 <tr><td>27</td><td>สาขา wip/v64 ยังไม่เสร็จ และ pending/v64/done_check.sh ที่ HANDOFF อ้างถึงไม่มีในรีโพ</td><td>อย่าอ้างสาขานี้ว่าเป็นสถานะจริง</td><td>SETUP.md:53, HANDOFF</td></tr>
 <tr><td>28</td><td>ในโหมดนับ event photo ไม่ถูกส่งรายรอบ</td><td>ดู event auto</td><td>app.js photoRun</td></tr>
-<tr><td>29</td><td>การรวมบ่อและการเขียนบล็อบผ่าน API ยังไม่ยืนยันว่าตรงกับเจตนาของผู้ออกแบบ</td><td>อ่านข้อ 9.6 ก่อนแก้ route เหล่านี้</td><td>functions:99-121</td></tr>
-<tr><td>30</td><td>ไม่มีไฟล์ LICENSE ที่รากรีโพ ไฟล์สาธารณะ (LICENSE, NOTICE, README) อยู่ในโฟลเดอร์ public/</td><td>ใช้ <code>scripts/make_public.sh</code> สร้างโฟลเดอร์ export ไม่ push</td><td>public/, make_public.sh</td></tr>
+<tr><td>29</td><td>การรวมบ่อเปิดให้ทุกอุปกรณ์ (จำกัด 10 ครั้งต่อวัน) และการเขียนบล็อบตรงเป็นของผู้ดูแลเท่านั้น ตามการตัดสินใจไม่มีระบบ admin</td><td>อ่านข้อ 9.6 ก่อนแก้ route เหล่านี้</td><td>functions:183-210</td></tr>
+<tr><td>30</td><td>รีโพภายในไม่มี LICENSE ที่ราก ไฟล์สาธารณะ (LICENSE, NOTICE, README, SETUP และอื่น ๆ) อยู่ใน public/ และถูกคัดลอกไปที่รากของรีโพสาธารณะ</td><td>แก้เอกสารสาธารณะที่ public/ แล้วรัน make_public.sh</td><td>public/, make_public.sh</td></tr>
+<tr><td>31</td><td>รีโพสาธารณะเป็น mirror: ห้ามรับ pull request ไปแก้ที่นั่นตรง ๆ แล้ว deploy เพราะ production deploy จากรีโพภายในเท่านั้น</td><td>นำ PR ที่รับแล้วกลับเข้ารีโพภายใน ออกเวอร์ชัน แล้ว make_public.sh ทับ (commit ใหม่ ประวัติเรียงต่อ)</td><td>HANDOFF, make_public.sh</td></tr>
+<tr><td>32</td><td>make_public.sh หยุดถ้าพบชื่อเจ้าของ ชื่อบริษัท หรือเส้นทาง /home ในไฟล์ที่ส่งออก</td><td>แก้ต้นทางแทนการปิดการตรวจ</td><td>make_public.sh</td></tr>
+<tr><td>33</td><td>โทเคน Cloudflare ของเครื่องมืออ่าน D1 ได้อย่างเดียว คำสั่ง <code>d1 execute --remote</code> แบบเขียนจะล้ม (7500)</td><td>เปลี่ยนตารางผ่าน <code>schema()</code> ใน API หรือให้เจ้าของบัญชีรัน</td><td>functions:139-150</td></tr>
 </table></div>
 
 <!-- ============================================================ 12 -->
@@ -832,35 +875,32 @@
 <p>ข้อเสนอเรียงตามลำดับความสำคัญของผู้พัฒนาต่อ PIC เป็นบทบาท ไม่ใช่ชื่อบุคคล เงื่อนไขเริ่มระบุว่าต้องรอสิ่งใด ความพยายามใช้ S (เล็ก) M (กลาง) L (ใหญ่)</p>
 <div class="tw"><table>
 <tr><th>#</th><th>ข้อเสนอ</th><th>เหตุผล (why)</th><th>ความพยายาม</th><th>PIC (บทบาท)</th><th>เงื่อนไขเริ่ม</th></tr>
-<tr><td>1</td><td>ทดสอบ v0.064 บน iPhone โดยโหมดนับเป็นค่าเริ่มต้น และวัดรอบเป็นตัวเลข</td><td>ยังไม่มีผลบน iPhone ของ v0.064</td><td>S</td><td>QA, เจ้าของระบบ (ทดสอบมือถือ)</td><td>build ใหม่พร้อมแล้ว</td></tr>
-<tr><td>2</td><td>ยืนยันเวอร์ชันบน production สถานะ migration 0009 และจำนวนแถวของ D1</td><td>เอกสารนี้ไม่ได้ตรวจจาก production</td><td>S</td><td>IT</td><td>อ่านอย่างเดียว</td></tr>
+<tr><td>1</td><td>ทดสอบรอบนับต่อเนื่องของ v0.066 บน iPhone จากแท็บใหม่ (ปิดแท็บเดิมก่อน) 3 นาที และอ่าน event auto ใน D1 ถ้ายังตายใน 30 วินาที ให้หาสาเหตุด้วย footprint probe</td><td>v0.065 ถูกฆ่า 3 ครั้ง (ครั้งแรกเพราะไฟล์วิดีโอค้าง แก้แล้วใน v0.066 อีกสองครั้งยังไม่รู้สาเหตุ)</td><td>S</td><td>QA, เจ้าของระบบ (ทดสอบมือถือ)</td><td>build พร้อมแล้ว</td></tr>
+<tr><td>2</td><td>ย้ายโหมดวิดีโอไฟล์มาใช้วงจรรอบนับ (photoRun) แบบเดียวกับกล้อง</td><td>วงจรรอบนับเป็นเส้นทางเดียวที่มั่นคงบน iPhone โหมดวิดีโอไฟล์ยังใช้ลูปเดิม (เคยตาย 1 ครั้ง)</td><td>M</td><td>Tech Lead</td><td>เจ้าของระบบเลือกลำดับงาน</td></tr>
 <tr><td>3</td><td>ตัดสินใจเรื่องการติดตามข้ามรอบและยอดรวมของบ่อ</td><td>ตอนนี้แต่ละรอบเป็นอิสระ ยังไม่มียอดบ่อ</td><td>L</td><td>เจ้าของระบบ (ตัดสิน), Tech Lead (ออกแบบ)</td><td>เจ้าของระบบตอบคำถามเรื่องกติกาการนับ</td></tr>
-<tr><td>4</td><td>ปิดประเด็นความปลอดภัยก่อนเปิดกว้าง ได้แก่ การควบคุมเข้าถึงรายบ่อ โควตา และการรวมบ่อ</td><td>รายงาน SECURITY_REVIEW ระบุว่าต้องแก้ก่อน</td><td>M</td><td>Tech Lead, IT</td><td>เจ้าของระบบอนุมัตินโยบายสิทธิ์</td></tr>
+<tr><td>4</td><td>เพิ่ม WAF rate limit บน <code>/api/*</code> และ (ถ้าจะใช้วงกว้าง) เจ้าของหรือสมาชิกของบ่อ</td><td>โควตาต่ออุปกรณ์ทำแล้วใน v0.065 แต่การลงทะเบียนยังเปิด และทุกอุปกรณ์เข้าถึงทุกบ่อ (ข้อ 9.6)</td><td>M</td><td>IT, Tech Lead</td><td>เจ้าของระบบตัดสินเรื่องระบบสิทธิ์</td></tr>
 <tr><td>5</td><td>ทำความสะอาดรหัสปลาใน fish.json (ราว 440 รหัสสำหรับปลาจริงราว 50 ตัว)</td><td>ทำให้วัดความแม่นยำจริงได้ ตอนนี้ค่า top-1 ต่ำเกินจริงเพราะปลาตัวเดียวกันมีหลายรหัส</td><td>M</td><td>ML Engineer, QA</td><td>มีป้ายกำกับที่ตรวจแล้ว</td></tr>
 <tr><td>6</td><td>ปรับ embedder ด้วย crop ของ YOLOX (crop C) บน Colab</td><td>ผลวิจัย 31 ต.ค. ชี้ว่าการใช้วงรีแย่กว่า colour mask และการปรับโมเดลเป็นทางที่มีแนวโน้มดีที่สุด (pending/yxid/REPORT.md)</td><td>M</td><td>ML Engineer</td><td>ข้อ 5 เสร็จ</td></tr>
 <tr><td>7</td><td>ลองหัว re-ID แบบ JDE หรือ FairMOT บน YOLOX เป็นเครือข่ายเดียว</td><td>ทางเลือกถ้าข้อ 6 ไม่พอ</td><td>L</td><td>ML Engineer</td><td>ข้อ 5 เสร็จ มิฉะนั้นหัวจะเรียนรู้รหัสผิด</td></tr>
 <tr><td>8</td><td>หาสาเหตุหน่วยความจำของ id=1 บน iPhone (ตายหลัง 4-5 รูป)</td><td>โหมดระบุตัวปลายังไม่มั่นคง</td><td>M</td><td>Tech Lead</td><td>วัดด้วย footprint probe บน Mac</td></tr>
-<tr><td>9</td><td>รัน tracker.test.mjs และ pond.test.mjs บน HEAD</td><td>ยังไม่ยืนยันว่าผ่าน HANDOFF ระบุว่า tracker ล้มบน main ตอน v63</td><td>S</td><td>QA</td><td>ไม่มี</td></tr>
-<tr><td>10</td><td>ตัดสินใจเรื่อง app/about.html (คู่มือรุ่นก่อน) และลิงก์ที่ index.html:133 ให้ชี้มาที่คู่มือนี้หรือรวมกัน</td><td>มีคู่มือสองฉบับ ฉบับในแอปมีตัวเลขเมื่อ 25 ต.ค.</td><td>S</td><td>Tech Lead, เจ้าของระบบ</td><td>เทียบเนื้อหาของ about.html ก่อน</td></tr>
+<tr><td>9</td><td>แก้ tracker.test.mjs ให้ผ่าน (ล้มบน v0.066: assertion 0 !== 3) ส่วน pond.test.mjs ผ่าน</td><td>tracker ไม่ได้ใช้ในวงจรนับ แต่จำเป็นถ้าจะทำยอดรวมของบ่อ (ข้อ 3)</td><td>S</td><td>QA, Tech Lead</td><td>ไม่มี</td></tr>
+<tr><td>10</td><td>ทำเสร็จใน v0.066: <code>app/about.html</code> สร้างจากต้นฉบับเดียวกับคู่มือนี้โดย build_manual.py</td><td>เดิมมีคู่มือสองฉบับ ฉบับในแอปค้างที่ 25 ต.ค.</td><td>S</td><td>Tech Lead</td><td>เสร็จแล้ว</td></tr>
 <tr><td>11</td><td>ล้างข้อความค้างและไฟล์เก่า (sync.js:1, คอมเมนต์ migrations 0001, auto_evolve.sh, wip/v64)</td><td>ลดความสับสนของผู้อ่านรีโพก่อนเปิดซอร์ส</td><td>S</td><td>Tech Lead</td><td>เจ้าของระบบตัดสิน wip/v64</td></tr>
-<tr><td>12</td><td>ตรวจ export ด้วย scripts/make_public.sh และยืนยันว่าไม่มีชื่อหรือเส้นทางส่วนตัวหลงเหลือ</td><td>ก่อนสร้างรีโพสาธารณะ ตามการตัดสินใจ 1 พ.ย. ให้ใช้ประวัติใหม่ Apache-2.0 และเฉพาะโมเดล</td><td>S</td><td>IT, Tech Lead</td><td>ไม่มี</td></tr>
+<tr><td>12</td><td>ทำเสร็จ 1 พ.ย.: รีโพสาธารณะ kpanuwat/koi-id-public (ประวัติใหม่ Apache-2.0 เฉพาะโมเดล) ทดสอบ clone ใหม่ผ่าน ต่อไปอัปเดตทุกเวอร์ชันตามข้อ 10.5</td><td>ให้นักพัฒนาภายนอกต่อยอดได้</td><td>S</td><td>IT, Tech Lead</td><td>ทุกครั้งที่ออกเวอร์ชัน</td></tr>
 <tr><td>13</td><td>วัดผลการโหลด embed parts ตอนติดตั้ง service worker บนอุปกรณ์โหมดนับ</td><td>ยังไม่รู้ผลต่อหน่วยความจำและการใช้ข้อมูลมือถือ</td><td>S</td><td>QA</td><td>ไม่มี</td></tr>
 <tr><td>14</td><td>เปลี่ยนชื่อฟิลด์ openMs ให้ตรงกับความหมาย</td><td>ชื่อเดิมทำให้เข้าใจผิดในโหมดเก็บสตรีม</td><td>S</td><td>Tech Lead</td><td>ทำพร้อม build ถัดไป</td></tr>
 <tr><td>15</td><td>ประเมิน v64 (detect slow, track fast) ใหม่บนพื้นฐานโหมดนับ</td><td>แผนเดิมอยู่บน wip/v64 ยังไม่เสร็จ</td><td>L</td><td>Tech Lead</td><td>เจ้าของระบบยืนยันทิศทาง</td></tr>
 </table></div>
 
 <h3>12.1 รายการที่ยังไม่ยืนยัน <span class="en">UNVERIFIED list</span></h3>
+<p class="meta">ตรวจแล้วเมื่อ 1 พ.ย. (ตัดออกจากรายการ): production เป็น v0.065 แล้ว v0.066 ตาราง D1 ครบ (ponds, samples, frames, devices, logs, gallery_keys, blobs, quota) มี 2 บ่อ 16 อุปกรณ์ 316 sample 100 frame log ถึงแถว 1204 pond.test.mjs ผ่าน tracker.test.mjs ล้ม about.html รวมกับคู่มือนี้แล้ว</p>
 <ol>
-<li>เวอร์ชันที่ใช้งานจริงบน production (ทีมระบุเป็น v0.064 แต่เอกสารนี้ไม่ได้ตรวจจาก production)</li>
-<li>ผลบน iPhone ของ v0.064 (ทดสอบโหมดนับเป็นค่าเริ่มต้นบนโทรศัพท์ยังไม่ได้ทำ)</li>
-<li>สถานะ migration 0009 บน D1 และจำนวนแถวปัจจุบัน</li>
-<li>ผลของ tracker.test.mjs และ pond.test.mjs บน HEAD</li>
+<li>สาเหตุที่รอบนับของ v0.065 ถูกฆ่าภายใน 17-32 วินาทีหลังการ crash ครั้งแรก (D1 1214-1224) ทั้งที่โค้ดนับเหมือน v63.27 สมมติฐาน: หน่วยความจำของ WebKit ยังไม่คืนหลังแท็บถูกฆ่า</li>
 <li>ผล eval เมื่อโหมดนับเป็นค่าเริ่มต้น (ต้องใช้ count=0 หรือไม่)</li>
-<li>เนื้อหาเต็มของ app/about.html ยังไม่ได้เทียบกับเอกสารนี้</li>
 <li>ผลของการโหลด embed parts ตอนติดตั้ง service worker ต่อหน่วยความจำและการใช้ข้อมูล</li>
-<li>ผลของโหมดนับจากวิดีโอไฟล์บน iPhone (ยังไม่มีตัวเลขจาก log)</li>
+<li>ผลของโหมดนับจากวิดีโอไฟล์บน iPhone (ยังไม่มีตัวเลขจาก log การรันบน Colab CPU ช้าเกินจนไม่ได้ผล)</li>
 <li>ขนาดอินพุต 312 ของ koi_det_lite16 มาจากคอมเมนต์ใน models.js ยังไม่ได้ตรวจจากไฟล์โมเดล</li>
-<li>ความตั้งใจของเส้นทางการรวมบ่อและการเขียนบล็อบผ่าน API (functions:99-121)</li>
+<li>พฤติกรรมของโควตาเมื่อมีผู้ใช้จำนวนมาก (ค่าปัจจุบันตั้งสำหรับโทรศัพท์ไม่กี่เครื่อง)</li>
 </ol>
 
 <!-- ============================================================ 13 -->
@@ -913,7 +953,10 @@
 <tr><td>Field log</td><td>บันทึกจากอุปกรณ์จริงที่ส่งเข้าตาราง logs ของ D1</td></tr>
 <tr><td>Google Colab</td><td>สภาพแวดล้อมเทรนของ Google ที่เป็นค่าเริ่มต้นของการเทรนและ eval</td></tr>
 <tr><td>AGPL (Ultralytics)</td><td>ใบอนุญาตที่หลีกเลี่ยง เพราะต้องเปิดซอร์สและมีข้อจำกัดเชิงพาณิชย์</td></tr>
-<tr><td>Apache-2.0</td><td>ใบอนุญาตโอเพนซอร์สที่ระบบจะใช้เมื่อเปิดซอร์ส</td></tr>
+<tr><td>Apache-2.0</td><td>ใบอนุญาตโอเพนซอร์สของรีโพสาธารณะ ใช้ เปลี่ยน และขายต่อได้ ต้องคง LICENSE และ NOTICE</td></tr>
+<tr><td>Public mirror</td><td>รีโพสาธารณะที่สร้างจากรีโพภายในด้วย make_public.sh ไม่ใช่ที่ deploy production</td></tr>
+<tr><td>Quota (โควตา)</td><td>ขีดจำกัดจำนวนครั้งและขนาดข้อมูลต่ออุปกรณ์ต่อวันใน API เกินแล้วได้ HTTP 429</td></tr>
+<tr><td>HTTP 429 / 413</td><td>รหัสตอบกลับ: 429 เรียกบ่อยเกินโควตา 413 ข้อมูลใหญ่เกิน</td></tr>
 <tr><td>PDPA</td><td>กฎหมายคุ้มครองข้อมูลส่วนบุคคลของไทย ใช้เป็นกรอบเรื่องพิกัดและข้อมูลอุปกรณ์</td></tr>
 <tr><td>Code point</td><td>หน่วยอักขระของ Unicode ใช้นับความยาวชื่อปลา</td></tr>
 <tr><td>ver</td><td>เลขเวอร์ชันของคลังบ่อใน D1</td></tr>
@@ -934,8 +977,12 @@
 <tr><td><code>docs/dev/build_manual.py</code></td><td>สร้างคู่มือ ฝังภาพ และตรวจอักขระต้องห้าม</td><td>รันด้วย train/.venv/bin/python -I</td></tr>
 <tr><td><code>docs/dev/facts.md</code>, <code>docs/dev/img/</code></td><td>ข้อเท็จจริงฉบับเต็มสำหรับคู่มือ และภาพหน้าจอ</td><td>ใช้ตรวจย้อนกลับ</td></tr>
 <tr><td><code>docs/Koi_ID_Developer_Manual.html</code></td><td>ผลลัพธ์ของคู่มือนี้ (ไฟล์เดียว ฝังภาพ)</td><td>ไฟล์ที่ผู้อ่านเปิด</td></tr>
-<tr><td><code>docs/public/SECURITY_REVIEW.md</code></td><td>รายงานทบทวนความปลอดภัยก่อนเปิดซอร์ส</td><td>ต้องอ่านก่อนแตะ API</td></tr>
-<tr><td><code>app/index.html</code></td><td>DOM และ CSS ของหน้าหลัก</td><td>ลิงก์คู่มือรุ่นก่อนที่บรรทัด 133</td></tr>
+<tr><td><code>docs/public/SECURITY_REVIEW.md</code>, <code>docs/public/HARDENING.md</code></td><td>รายงานทบทวนความปลอดภัย และสิ่งที่แก้ใน v0.065 (โควตา การตรวจค่า)</td><td>อยู่ในรีโพภายใน ข้อ 9.6 สรุปไว้ ต้องอ่านก่อนแตะ API</td></tr>
+<tr><td><code>public/</code></td><td>README, LICENSE, NOTICE, THIRD_PARTY_NOTICES, SETUP, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT และ scripts/fetch_models.sh</td><td>ไฟล์รากของรีโพสาธารณะ</td></tr>
+<tr><td><code>scripts/make_public.sh</code></td><td>ส่งออกรีโพสาธารณะ ตัดข้อมูลส่วนตัว และตรวจการรั่ว</td><td>ข้อ 10.5</td></tr>
+<tr><td><code>scripts/api_limits_test.sh</code></td><td>ทดสอบโควตาของ API กับ wrangler pages dev แบบ local</td><td>ห้ามรันกับ production</td></tr>
+<tr><td><code>app/about.html</code></td><td>คู่มือนี้ในแอป (หน้า /about) สร้างโดย build_manual.py</td><td>ห้ามแก้ตรง แก้ manual_src.html</td></tr>
+<tr><td><code>app/index.html</code></td><td>DOM และ CSS ของหน้าหลัก</td><td>ลิงก์ไปยัง about.html (คู่มือนี้) ที่บรรทัด 133</td></tr>
 <tr><td><code>app/app.js</code></td><td>UI และการจัดการทั้งหมดในหน้าเว็บ</td><td>ไฟล์หลักที่สุด 1,390 บรรทัด</td></tr>
 <tr><td><code>app/engine.js</code>, <code>app/worker.js</code></td><td>ตัวจัดการเวิร์กเกอร์และจุดเข้าของเวิร์กเกอร์</td><td>ดูหัวข้อ 2 และ 4</td></tr>
 <tr><td><code>app/pipeline.js</code>, <code>app/models.js</code></td><td>ไปป์ไลน์รายเฟรม และการโหลดกับเรียกโมเดล</td><td>ดูหัวข้อ 7</td></tr>

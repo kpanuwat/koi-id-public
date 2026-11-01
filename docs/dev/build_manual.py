@@ -1,5 +1,5 @@
 """Build docs/Koi_ID_Developer_Manual.html from docs/dev/manual_src.html: {{img:NAME}} -> docs/dev/img/NAME.png as an
-embedded JPEG data URL (one self-contained file).     train/.venv/bin/python -I docs/dev/build_manual.py"""
+embedded JPEG data URL (one self-contained file), and the same page as app/about.html.     train/.venv/bin/python -I docs/dev/build_manual.py"""
 import base64, re
 from pathlib import Path
 
@@ -22,3 +22,8 @@ bad = [c for c in ['—', '§', '─', '│', '├', '└'] if c in out]  # hous
 assert not bad, f'banned characters: {bad}'
 (D.parent / 'Koi_ID_Developer_Manual.html').write_text(out)
 print('wrote', D.parent / 'Koi_ID_Developer_Manual.html', len(out) // 1024, 'KB')
+# the same manual is the app's /about page, with a way back to the app
+about = out.replace('<header class="hero">', '<p class="meta"><a href="./">กลับไปที่แอป (back to the app)</a></p>\n<header class="hero">', 1)
+assert about != out
+(D.parents[1] / 'app' / 'about.html').write_text(about)
+print('wrote app/about.html')

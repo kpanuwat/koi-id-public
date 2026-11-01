@@ -4,20 +4,22 @@
 An on-device PWA that counts koi in a pond from the phone camera, a photo or a video file.
 
 - เดโม (reference deployment): https://koi-id.pages.dev
-- คู่มือนักพัฒนา (developer manual): [`docs/Koi_ID_Developer_Manual.html`](docs/Koi_ID_Developer_Manual.html) (download and open in a browser)
+- คู่มือนักพัฒนา (developer manual): https://koi-id.pages.dev/about (same file as [`docs/Koi_ID_Developer_Manual.html`](docs/Koi_ID_Developer_Manual.html); source `docs/dev/manual_src.html`, build `docs/dev/build_manual.py`)
 - สัญญาอนุญาต (licence): Apache-2.0, see [`LICENSE`](LICENSE), [`NOTICE`](NOTICE), [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
 
-## สถานะ (Status, v0.064)
+## สถานะ (Status, v0.066)
 
 | โหมด (mode) | URL | สถานะ (status) |
 |---|---|---|
-| นับต่อเนื่องจากกล้อง (continuous camera count) | `/` then **กล้อง** | เสถียรบน iPhone: ~7 รอบ/วินาที นาน 3.5 นาทีไม่ crash (stable) |
+| นับต่อเนื่องจากกล้อง (continuous camera count) | `/` then **กล้อง** | เสถียรบน iPhone ใน v63.27: ~7 รอบ/วินาที นาน 3.5 นาทีไม่ crash; v0.065 ถูกฆ่า 3 ครั้ง (ครั้งแรกเพราะไฟล์วิดีโอค้าง แก้ใน v0.066) กำลังยืนยัน (stable at the checkpoint, re-checking) |
 | นับจากภาพถ่าย (photo count) | `/` then **ถ่ายภาพ** | เสถียร (stable) |
 | นับจากไฟล์วิดีโอ (video file) | `/` then **ไฟล์วิดีโอ** | ใช้ได้ เคย crash 1 ครั้งบน iPhone (works, one iPhone crash seen) |
 | เลขประจำตัวปลา (permanent fish numbers) | `/?id=1` | ทดลอง: iPhone crash หลัง 4-5 ภาพ (experimental) |
 | แอปเต็มแบบเดิม (full app: tracking, naming, gallery) | `/?count=0` | ทดลอง: crash บน iPhone (experimental) |
 
 แต่ละรอบนับปลาที่เห็นในเฟรมนั้น ยังไม่ใช่ยอดรวมทั้งบ่อ (each round counts the fish in that frame, not a pond total yet).
+
+Backend (v0.065+): per-device daily quotas, size caps and value checks, no admin roles; open items (open enrolment, pond positions visible to all devices) are listed in the manual, section 9.6. Roadmap: manual section 12.
 
 ## เริ่มใช้งานบนเครื่องตัวเอง (Quick start)
 

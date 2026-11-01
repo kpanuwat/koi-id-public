@@ -16,7 +16,7 @@ const COUNT_ONLY = params.get('count') !== '0'; // the default since v0.064 (own
 // written, a fish the gallery does not know keeps a 2-digit hex for the session (StillSession)
 const COUNT_ID = COUNT_ONLY && params.get('id') === '1';
 let statusTimer; // declared first: status() can run before the rest of this module (e.g. no service worker)
-const BUILD = 'v0.065';
+const BUILD = 'v0.066';
 const SLOW_EMBED = params.get('slowAdapt') === '1'; // 'count' eases only the counting rules on slow devices // keep in step with CACHE in sw.js; sent with every field report
 
 // ---------- self-healing after a crash: the OS killing the tab (iPhone memory limit) leaves the stage it died in behind;
@@ -783,7 +783,11 @@ async function autoCount() {
   let rounds = 0, openMs = 0, countMs = 0, beatAt = performance.now();
   report('auto', { step: 'on', keep, warmN });
   try {
-    stop(); await warm();
+    stop();
+    // a video file picked before stays decoded in #video after stop(): with the camera on top the iPhone killed the
+    // tab 11 s later (field log 1213-1214, 1 Nov 2026), so the file is let go first
+    if (video.getAttribute('src')) { if (video.src.startsWith('blob:')) URL.revokeObjectURL(video.src); video.removeAttribute('src'); video.load(); }
+    await warm();
     if (!navigator.mediaDevices?.getUserMedia) throw new Error('เบราว์เซอร์นี้เปิดกล้องไม่ได้ (ต้องเปิดผ่าน https หรือ localhost)');
     while (g === autoGen && !document.hidden) {
       const t0 = performance.now();
