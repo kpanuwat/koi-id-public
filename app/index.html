@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Koi ID</title>
+<meta name="description" content="ระบุตัวปลาคาร์ฟและตั้งชื่อเล่นอัตโนมัติ ทำงานบนเครื่อง">
+<meta name="theme-color" content="#f6f7f5">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Koi ID">
+<style>
+  :root {
+    --bg: #f6f7f5; --card: #fff; --line: #dfe3dd; --ink: #1b2a22; --mute: #5f6b63; --brand: #2B7051; --accent: #FFCE00; --err: #b3261e;
+    font-family: "Noto Sans Thai", "Sarabun", system-ui, sans-serif; color: var(--ink); background: var(--bg);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); }
+  body { display: grid; grid-template-rows: 1fr auto; height: 100dvh; padding: env(safe-area-inset-top) 0 0; }
+
+  /* the canvas panel is the whole app */
+  #stage { position: relative; display: flex; align-items: center; justify-content: center; min-height: 0; overflow: hidden; padding: 12px 16px 0; }
+  /* the browser plays the video itself (smooth, untouched pixels); a transparent canvas on top carries boxes + count */
+  #panel { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #e9ece8; } /* size set by fit() in app.js */
+  #panel video, #panel canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #view { touch-action: manipulation; }
+  #empty { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: var(--mute); font-size: 15px; pointer-events: none; padding: 24px; }
+  #empty b { display: block; color: var(--ink); font-size: 18px; margin-bottom: 4px; }
+  #pond { font: inherit; padding: 6px; border: 1px solid var(--line); border-radius: 6px; max-width: 160px; }
+
+  /* dock: two big actions + library */
+  #dock { display: flex; gap: 8px; justify-content: center; align-items: center; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); }
+  #dock.disabled { opacity: .5; pointer-events: none; }
+  /* idle: pick a source · running: pause, stop, boxes on/off */
+  #dock.running .idle, #dock:not(.running) .live { display: none; }
+  /* photo result: take another, pick from the library, close; the other sources hide */
+  #dock:not(.photo) .photo-only, #dock.photo .idle:not(.shot), #dock.photo .t-idle, #dock:not(.photo) .t-photo { display: none; }
+  @media (max-width: 420px) { #dock { gap: 6px; padding-left: 8px; padding-right: 8px; } #dock button, #dock .btn { padding-left: 10px; padding-right: 10px; } }
+  button.icon { padding: 10px; min-width: 44px; justify-content: center; }
+  #boxes[aria-pressed="false"] { color: var(--mute); text-decoration: line-through; }
+  button, .btn { font: inherit; font-size: 15px; padding: 10px 14px; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  button:hover, .btn:hover { border-color: var(--brand); }
+  .primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .btn input { display: none; }
+  [hidden] { display: none !important; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  button:focus-visible, .btn:focus-within, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .badge { background: var(--accent); color: var(--ink); border-radius: 999px; font-size: 12px; padding: 0 7px; font-weight: 700; }
+  #status { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 48px); margin: 0; background: rgba(255,255,255,.92); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 13px; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity .4s; }
+  #status.err { color: var(--err); }
+  #status.fade { opacity: 0; }
+
+  /* library sheet */
+  #sheet { position: fixed; inset: auto 0 0 0; max-height: 82dvh; overflow: auto; background: var(--card); border-top: 1px solid var(--line); border-radius: 16px 16px 0 0; padding: 12px 16px 16px; box-shadow: 0 -8px 24px rgba(0,0,0,.08); transform: translateY(105%); transition: transform .25s ease; }
+  #sheet:not(.open) { visibility: hidden; transition: transform .25s ease, visibility 0s .25s; }
+  #sheet.open { transform: none; }
+  #sheet header { display: flex; justify-content: space-between; align-items: center; position: sticky; top: -12px; background: var(--card); padding: 4px 0 8px; }
+  h2 { font-size: 16px; margin: 0; }
+  h3 { font-size: 14px; margin: 12px 0 6px; }
+  #gallery { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .card { display: grid; grid-template-columns: 112px 1fr auto; gap: 8px; align-items: center; border: 1px solid var(--line); border-left: 4px solid var(--c, var(--line)); border-radius: 8px; padding: 6px; }
+  .card.pick { outline: 2px solid var(--accent); }
+  .card img { width: 112px; height: 56px; object-fit: cover; border-radius: 4px; background: #e9ece8; }
+  .meta { display: grid; gap: 2px; min-width: 0; }
+  .name { font: inherit; font-weight: 600; border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; width: 100%; background: var(--bg); }
+  .sub { font-size: 12px; color: var(--mute); }
+  .acts { display: grid; gap: 4px; }
+  .acts button, #review button, #suggest button { font-size: 13px; padding: 6px 10px; min-height: 36px; }
+  #suggest, #review { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; font-size: 13px; }
+  #suggest li { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  #suggest li span { flex: 1 1 100%; }
+  #review li { display: grid; grid-template-columns: 112px 1fr; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 6px; }
+  #review img { width: 112px; height: 56px; object-fit: cover; border-radius: 4px; }
+  #review div { display: flex; flex-wrap: wrap; gap: 4px; }
+  #review .quiet { color: var(--mute); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; font-size: 14px; }
+  .foot { font-size: 12px; color: var(--mute); margin: 10px 0 0; }
+  details { font-size: 13px; color: var(--mute); margin-top: 10px; }
+
+  /* in-app shutter: full-screen live preview, no analysis; contain = the whole captured frame is on screen */
+  #shooter { position: fixed; inset: 0; z-index: 10; background: #000; }
+  #shooter video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  #shooter .bar { position: absolute; inset: auto 0 0 0; display: flex; justify-content: center; align-items: center; padding: 16px 16px calc(24px + env(safe-area-inset-bottom)); }
+  #shootCancel { position: absolute; left: 16px; background: rgba(0,0,0,.45); color: #fff; border-color: rgba(255,255,255,.5); }
+  #shutter { width: 76px; height: 76px; padding: 0; border-radius: 50%; border: 5px solid #fff; background: rgba(255,255,255,.3); }
+  #shutter:active { background: #fff; }
+  #shutter:disabled { opacity: .4; }
+  /* photo only (owner, 27 Oct 2026): video file, live camera and library pick hide unless ?full=1 */
+  body.still .vid { display: none !important; }
+  /* the photo result keeps กรอบ (boxes on/off; names, IDs and the count stay) */
+  #dock.photo #boxes { display: inline-flex; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="panel"><video id="video" playsinline muted></video><canvas id="view" width="540" height="960" aria-label="ภาพวิดีโอพร้อมจำนวนปลา กรอบ และชื่อปลา"></canvas></div>
+  <div id="empty"><div><b>Koi ID</b>กดถ่ายภาพบ่อ ระบบจะนับปลา ระบุตัว และตั้งชื่อให้อัตโนมัติ</div></div>
+  <p id="status" role="status">กำลังเริ่ม...</p>
+  <p id="live" class="sr-only" aria-live="polite"></p>
+</div>
+
+<nav id="dock" class="disabled">
+  <label class="btn primary idle vid">ไฟล์วิดีโอ<input id="file" type="file" accept="video/*"></label>
+  <button id="cam" class="idle vid">กล้อง</button>
+  <button id="photo" class="primary idle shot" title="ถ่ายภาพบ่อในแอป ระบบนับและระบุตัวปลาในภาพ"><span class="t-idle">ถ่ายภาพ</span><span class="t-photo">ถ่ายใหม่</span></button>
+  <label class="btn photo-only vid">คลังภาพ<input id="photoLib" type="file" accept="image/*"></label>
+  <button id="photoClose" class="photo-only">ปิด</button>
+  <button id="pause" class="live icon" aria-label="หยุดชั่วคราว" title="หยุดชั่วคราว (Space)"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg></button>
+  <button id="stop" class="live">หยุด</button>
+  <button id="boxes" class="live" aria-pressed="true" title="แสดงหรือซ่อนกรอบรอบปลา">กรอบ</button>
+  <button id="lib" aria-controls="sheet">คลังปลา <span class="badge" id="count">0</span></button>
+</nav>
+
+<section id="sheet" aria-label="คลังปลา">
+  <header><h2>คลังปลา</h2><button id="close">ปิด</button></header>
+  <div id="reviewBox" hidden><h3 title="ภาพที่ระบบตัดสินไม่ได้ คำตอบของคุณสอนระบบทันทีและเก็บเป็นป้ายยืนยัน">ปลาตัวนี้คือ?</h3><ul id="review"></ul></div>
+  <div id="suggestBox" hidden><h3>อาจเป็นตัวเดียวกัน</h3><ul id="suggest"></ul></div>
+  <h3>ชื่อปลา (แตะชื่อเพื่อแก้)</h3>
+  <div id="gallery"></div>
+  <h3>บ่อ</h3>
+  <div class="row"><label title="ระบบเลือกบ่อเองจากตำแหน่งเมื่อเปิดกล้อง (ไม่เกิน 150 ม.) และเพิ่มบ่อใหม่เองเมื่ออยู่ที่อื่น เลือกดูบ่ออื่นได้ที่นี่">บ่อ <select id="pond"></select></label></div>
+  <p id="syncState" class="foot" role="status">กำลังเชื่อมต่อส่วนกลาง...</p>
+  <details><summary>อ่านภาพอย่างไร</summary>
+    <p>ตัวเลขมุมซ้ายบน = ปลาที่เห็นในขอบเขตน้ำของบ่อตอนนี้ (ไม่นับใบไม้หรือวัตถุนอกบ่อ) · มี ? = ยังมองไม่เห็นขอบบ่อ</p>
+    <p>กรอบสีพร้อมชื่อ = ภาพชัดและแยกปลาตัวนี้ออกจากตัวที่หน้าตา สี และขนาดใกล้กันได้ · กรอบขาวบาง = นับเป็นปลา แต่ยังไม่ชัดพอจะบอกว่าตัวไหน</p>
+    <p>รหัส 2 หลัก (เช่น 3F) บนกรอบขาว = เลขประจำตัวชั่วคราวของปลาที่ข้อมูลยังไม่พอระบุตัว ใช้ได้ตลอดที่ยังเห็นตัวนั้นอยู่ เมื่อหลักฐานพอ ระบบจะเปลี่ยนเป็นชื่อเล่น</p>
+    <p class="vid">ปุ่ม <b>กรอบ</b> ซ่อนหรือแสดงกรอบรอบปลา (ชื่อ รหัส และตัวเลขนับยังแสดงอยู่) · ปุ่มหยุดชั่วคราวหรือกด Space เพื่อพักภาพแล้วเล่นต่อ</p>
+  </details>
+  <p id="dataCount" class="foot" title="เก็บไว้ในเบราว์เซอร์ของเครื่องนี้ และส่งขึ้นส่วนกลางเองทันทีที่ออนไลน์"></p>
+  <p id="fps" class="foot"></p>
+  <p class="foot"><a href="about.html" target="_blank" rel="noopener">คู่มือระบบสำหรับนักพัฒนา</a></p>
+</section>
+<div id="shooter" role="dialog" aria-modal="true" aria-label="ถ่ายภาพ" hidden>
+  <video id="pv" playsinline muted></video>
+  <div class="bar"><button id="shootCancel">ยกเลิก</button><button id="shutter" aria-label="ถ่ายภาพ" disabled></button></div>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

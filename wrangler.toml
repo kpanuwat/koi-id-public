@@ -1,0 +1,10 @@
+# Cloudflare Pages project for the Koi ID PWA (static app in dist/, sync API in functions/). Deploy: ./deploy.sh
+name = "koi-id"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-10-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "koi-id"
+database_id = "<your-d1-database-id>"  # npx wrangler d1 create koi-id
+

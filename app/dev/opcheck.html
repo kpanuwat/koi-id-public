@@ -1,0 +1,16 @@
+<!doctype html><meta charset="utf-8"><title>op placement</title>
+<script type="module">
+// dev only (not deployed): which detector nodes ONNX Runtime Web puts on the CPU instead of WebGPU
+import * as ort from '../vendor/ort.webgpu.min.mjs';
+ort.env.wasm.wasmPaths = new URL('../vendor/', location.href).href;
+const prof = new Map(); let on = false;
+ort.env.webgpu.profiling = { mode: 'default', ondata: d => { if (!on) return; const k = d.kernelType, t = Number(d.endTime - d.startTime) / 1e6; prof.set(k, (prof.get(k) || 0) + t); } };
+const parts = (await (await fetch('../models/parts.json')).json())['koi_det.onnx'];
+const out = new Uint8Array(parts.bytes); let o = 0;
+for (let i = 0; i < parts.parts; i++) { const b = new Uint8Array(await (await fetch(`../models/koi_det.onnx.part${i}`)).arrayBuffer()); out.set(b, o); o += b.length; }
+const s = await ort.InferenceSession.create(out, { executionProviders: ['webgpu'] });
+const R = 432, x = new ort.Tensor('float32', new Float32Array(3 * R * R), [1, 3, R, R]);
+for (let i = 0; i < 3; i++) { on = i === 2; const t = performance.now(); await s.run({ [s.inputNames[0]]: x }); console.log('RUNMS', Math.round(performance.now() - t)); }
+console.log('PROF ' + JSON.stringify([...prof].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k, v]) => [k, +v.toFixed(2)])));
+document.title = 'done';
+</script>

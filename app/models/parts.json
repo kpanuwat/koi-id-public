@@ -1,0 +1,26 @@
+{
+ "coco_det.onnx": {
+  "parts": 3,
+  "bytes": 62273143
+ },
+ "embed.onnx": {
+  "parts": 3,
+  "bytes": 43847016
+ },
+ "koi_det.onnx": {
+  "parts": 4,
+  "bytes": 71843361
+ },
+ "koi_det_lite.onnx": {
+  "parts": 4,
+  "bytes": 70188537
+ },
+ "koi_det_lite16.onnx": {
+  "parts": 4,
+  "bytes": 70171881
+ },
+ "koi_yx320.onnx": {
+  "parts": 1,
+  "bytes": 20191037
+ }
+}

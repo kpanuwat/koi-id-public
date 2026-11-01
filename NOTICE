@@ -1,0 +1,15 @@
+Koi ID
+Copyright 2026 The Koi ID Authors
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+It includes third-party software:
+- ONNX Runtime Web 1.29.0 (app/vendor/), Copyright (c) Microsoft Corporation, MIT License.
+  https://github.com/microsoft/onnxruntime
+
+Model files published in this repository's GitHub Releases are fine-tuned derivatives of:
+- YOLOX-tiny, Copyright (c) Megvii Inc., Apache License 2.0. https://github.com/Megvii-BaseDetection/YOLOX
+- DINOv2 ViT-S/14 (facebook/dinov2-small), Copyright (c) Meta Platforms, Inc., Apache License 2.0.
+  https://github.com/facebookresearch/dinov2
+The pretrained base weights were trained on public datasets (e.g. COCO) whose own terms may apply.
+See THIRD_PARTY_NOTICES.md for the full list.

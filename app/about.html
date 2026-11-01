@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Koi ID Dev Guide</title>
+<meta name="description" content="คู่มือระบบ Koi ID สำหรับนักพัฒนา: tech stack, สถาปัตยกรรม, การไหลของข้อมูล, การเรียนรู้เอง">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+  :root { --bg: #f6f7f5; --card: #fff; --line: #e1e5df; --ink: #1b2a22; --mute: #5f6b63; --brand: #2B7051; --soft: #e7f1ec; --accent: #FFCE00; --asoft: #fff7d1; --bad: #b3261e; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.65 "Noto Sans Thai", "Sarabun", system-ui, sans-serif; }
+  main { max-width: 1000px; margin: 0 auto; padding: 28px 16px 64px; }
+  h1 { font-size: 26px; margin: 0; line-height: 1.3; }
+  h2 { font-size: 19px; margin: 36px 0 4px; }
+  h3 { font-size: 15px; margin: 16px 0 4px; }
+  .en { display: block; color: var(--mute); font-size: 13px; font-weight: 400; }
+  .meta { color: var(--mute); font-size: 13px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 10px 0; }
+  .grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--mute); font-size: 13px; font-weight: 600; background: #fafbf9; }
+  .tw { overflow-x: auto; } .tw table { min-width: 560px; }
+  code { font-family: ui-monospace, Menlo, monospace; font-size: 13px; background: #f0f2ee; padding: 1px 5px; border-radius: 4px; word-break: break-word; }
+  pre { background: #f0f2ee; border-radius: 8px; padding: 10px 12px; overflow-x: auto; font-size: 13px; }
+  .term { border-bottom: 1px dotted var(--brand); cursor: help; position: relative; }
+  .term:hover::after, .term:focus::after { content: attr(data-tip); position: absolute; left: 0; top: 1.6em; z-index: 5; width: max-content; max-width: 280px;
+    background: var(--ink); color: #fff; font-size: 12px; line-height: 1.5; padding: 6px 9px; border-radius: 6px; font-weight: 400; white-space: normal; }
+  .pill { display: inline-block; border-radius: 999px; padding: 0 9px; font-size: 12px; font-weight: 600; border: 1px solid var(--line); }
+  .g { color: var(--brand); background: var(--soft); border-color: #cfe3d8; } .r { color: var(--bad); background: #fbeceb; border-color: #f1cfcc; }
+  nav.toc { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; }
+  nav.toc a { font-size: 13px; color: var(--brand); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; background: var(--card); }
+  svg text { font-family: "Noto Sans Thai", system-ui, sans-serif; }
+  ul { padding-left: 20px; margin: 6px 0; } li { margin: 3px 0; }
+  a.back { color: var(--brand); }
+  footer { color: var(--mute); font-size: 12px; margin-top: 36px; border-top: 1px solid var(--line); padding-top: 10px; }
+</style>
+</head>
+<body>
+<main>
+<p><a class="back" href="./">กลับไปที่แอป</a></p>
+<h1>Koi ID: คู่มือระบบสำหรับนักพัฒนา<span class="en">Developer guide: tech stack, architecture, data, self-learning</span></h1>
+<p class="meta">ฉบับ 25 ตุลาคม 2026 · โค้ดแบ่งเป็น app/, train/, functions/</p>
+<nav class="toc" aria-label="สารบัญ">
+  <a href="#overview">ภาพรวม</a><a href="#stack">Tech stack</a><a href="#arch">สถาปัตยกรรม</a><a href="#frame">ต่อเฟรม</a><a href="#identity">ตัวตนและ flags</a>
+  <a href="#data">ข้อมูลและ sync</a><a href="#evolve">เรียนรู้เอง</a><a href="#files">ไฟล์</a><a href="#run">คำสั่ง</a><a href="#numbers">ตัวเลข</a><a href="#traps">กับดัก</a><a href="#next">งานถัดไป</a><a href="#glossary">อภิธานศัพท์</a>
+</nav>
+
+<h2 id="overview">1. ภาพรวม<span class="en">Overview</span></h2>
+<div class="card">
+<p>PWA ที่นับปลาคาร์ฟในบ่อ จำตัว และตั้งชื่อเล่นภาษาไทยอัตโนมัติ จากไฟล์วิดีโอหรือกล้องมือถือ <b>ประมวลผลบนเครื่องทั้งหมด</b> (ภาพไม่ถูกส่งไปประมวลผลที่เซิร์ฟเวอร์) ใช้ offline ได้หลังเปิดครั้งแรก และส่งผลการเรียนรู้ขึ้นที่เก็บส่วนกลางเมื่อผู้ใช้ใส่รหัสซิงก์</p>
+<ul>
+  <li><b>หลักการ:</b> ภาพต้นฉบับไม่ถูกแก้ไข กรอบและป้ายอยู่บน canvas โปร่งใส · ไม่แน่ใจไม่เดา ชื่อขึ้นเมื่อหลักฐานแยกปลาตัวนั้นได้แล้ว · นับเฉพาะปลาในผิวน้ำของบ่อ</li>
+  <li><b>พึ่งคนน้อยที่สุด:</b> ระบบติดป้าย รวมตัวซ้ำ แยกตัวที่ชนกัน ตั้งชื่อตามสี และพัฒนาโมเดลรอบใหม่ได้เอง คำตอบของผู้ใช้ใช้เพิ่มความแม่น แต่ไม่มีอะไรต้องรอคำตอบ</li>
+</ul>
+</div>
+
+<h2 id="stack">2. Tech stack</h2>
+<div class="card tw">
+<table>
+<tr><th>ชั้น</th><th>ใช้อะไร</th><th>หมายเหตุ</th></tr>
+<tr><td>หน้าเว็บ</td><td>HTML + JavaScript ES modules ล้วน ไม่มี framework, ไม่มี build step</td><td>ไฟล์เดียวต่อหน้าที่ แก้แล้ว deploy ได้ทันที</td></tr>
+<tr><td>Inference</td><td><span class="term" tabindex="0" data-tip="ไลบรารีของ Microsoft ที่รันโมเดล ONNX ในเบราว์เซอร์ ผ่าน WebGPU หรือ WASM">ONNX Runtime Web</span> (WebGPU, สำรองเป็น WASM) ใน Web Worker</td><td>รันได้ทีละโมเดล: ทุกคำสั่งเข้าคิวใน <code>engine.js</code></td></tr>
+<tr><td>ตรวจจับปลา + บ่อ</td><td>RF-DETR-Seg Nano 2 คลาส (koi, pond) 432 px fp16 72 MB</td><td>เทรนจากป้ายอัตโนมัติ OWLv2 + SAM2.1 (Apache-2.0)</td></tr>
+<tr><td>จำหน้าปลา</td><td>DINOv2-Small fine-tune 112x224 fp16 44 MB, embedding 256 มิติ</td><td>เทรนแบบไม่ต้องติดป้ายด้วยมือ (track เดียวกัน = ตัวเดียวกัน)</td></tr>
+<tr><td>วัตถุอื่น</td><td>RF-DETR Nano COCO 80 คลาส 384 px fp16 62 MB</td><td>โหลดทีหลัง ตรวจทุก 2 วินาที</td></tr>
+<tr><td>ข้อมูลในเครื่อง</td><td>IndexedDB (คลังปลา ภาพ เฟรม) + localStorage (การตั้งค่า บ่อ)</td><td>แยกตามบ่อ</td></tr>
+<tr><td>Offline</td><td>Service worker cache (โค้ดเปิดเน็ตก่อน, โมเดลใช้ cache ก่อน)</td><td>เปลี่ยน <code>CACHE</code> ใน sw.js ทุกครั้งที่ deploy</td></tr>
+<tr><td>Hosting + API</td><td>Cloudflare Pages + Pages Functions + D1 (SQLite) + R2 (ไฟล์)</td><td>ไฟล์ละไม่เกิน 25 MiB: โมเดลถูกแบ่งเป็นชิ้น 20 MB</td></tr>
+<tr><td>เทรน / วัดผล</td><td>Python 3.12, PyTorch (MPS บน Mac), rfdetr, transformers, onnx, OpenCV, Playwright</td><td>อยู่ใน <code>train/</code> (.venv)</td></tr>
+</table>
+</div>
+
+<h2 id="arch">3. สถาปัตยกรรม<span class="en">System architecture</span></h2>
+<div class="card">
+<svg viewBox="0 0 960 360" width="100%" role="img" aria-label="แผนภาพ: อุปกรณ์ผู้ใช้, Cloudflare, และรอบเทรน">
+  <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2B7051"/></marker></defs>
+  <g font-size="13">
+    <rect x="10" y="10" width="360" height="340" rx="14" fill="#fafbf9" stroke="#e1e5df"/>
+    <text x="26" y="34" font-weight="600">อุปกรณ์ผู้ใช้ (เบราว์เซอร์)</text>
+    <rect x="30" y="50" width="320" height="64" rx="10" fill="#fff" stroke="#c9d3cc"/><text x="46" y="76" font-weight="600">หน้าจอ (main thread) app.js</text><text x="46" y="98" fill="#5f6b63" font-size="12">วิดีโอ, canvas ซ้อน, ติดตาม, จำตัว, คลังปลา</text>
+    <rect x="30" y="128" width="320" height="64" rx="10" fill="#e7f1ec" stroke="#2B7051"/><text x="46" y="154" font-weight="600">Web Worker: pipeline.js + models.js</text><text x="46" y="176" fill="#5f6b63" font-size="12">ตรวจจับ, crop มาตรฐาน, embedding, วัตถุอื่น</text>
+    <rect x="30" y="206" width="155" height="64" rx="10" fill="#fff" stroke="#c9d3cc"/><text x="44" y="232" font-weight="600">IndexedDB</text><text x="44" y="254" fill="#5f6b63" font-size="12">คลัง, ภาพ, เฟรม</text>
+    <rect x="195" y="206" width="155" height="64" rx="10" fill="#fff" stroke="#c9d3cc"/><text x="209" y="232" font-weight="600">Service worker</text><text x="209" y="254" fill="#5f6b63" font-size="12">cache, offline</text>
+    <rect x="30" y="284" width="320" height="50" rx="10" fill="#fff7d1" stroke="#d9b200"/><text x="46" y="314" font-weight="600">sync.js: ส่งทุก 1 นาที / ตอนหยุด / กลับมาออนไลน์</text>
+    <rect x="410" y="10" width="250" height="340" rx="14" fill="#fafbf9" stroke="#e1e5df"/>
+    <text x="426" y="34" font-weight="600">Cloudflare</text>
+    <rect x="430" y="50" width="210" height="54" rx="10" fill="#fff" stroke="#c9d3cc"/><text x="446" y="74" font-weight="600">Pages (ไฟล์แอป + โมเดล)</text><text x="446" y="94" fill="#5f6b63" font-size="12">HTTPS, COOP/COEP</text>
+    <rect x="430" y="118" width="210" height="54" rx="10" fill="#e7f1ec" stroke="#2B7051"/><text x="446" y="142" font-weight="600">Functions /api/*</text><text x="446" y="162" fill="#5f6b63" font-size="12">ตรวจรหัสซิงก์ทุกคำขอ</text>
+    <rect x="430" y="186" width="98" height="64" rx="10" fill="#fff" stroke="#c9d3cc"/><text x="444" y="212" font-weight="600">D1</text><text x="444" y="234" fill="#5f6b63" font-size="12">ดัชนี</text>
+    <rect x="542" y="186" width="98" height="64" rx="10" fill="#fff" stroke="#c9d3cc"/><text x="556" y="212" font-weight="600">R2</text><text x="556" y="234" fill="#5f6b63" font-size="12">ภาพ, คลัง</text>
+    <text x="430" y="290" fill="#5f6b63" font-size="12">ข้อมูลแยกตามบ่อ: ponds/&lt;id&gt;/...</text>
+    <rect x="700" y="10" width="250" height="340" rx="14" fill="#fafbf9" stroke="#e1e5df"/>
+    <text x="716" y="34" font-weight="600">รอบพัฒนาตัวเอง (Mac)</text>
+    <g font-size="12">
+      <rect x="720" y="52" width="210" height="36" rx="8" fill="#fff" stroke="#c9d3cc"/><text x="734" y="75">1 คัดข้อมูล curate.py</text>
+      <rect x="720" y="100" width="210" height="36" rx="8" fill="#fff" stroke="#c9d3cc"/><text x="734" y="123">2 เทรนตัวจำหน้า train_reid.py</text>
+      <rect x="720" y="148" width="210" height="36" rx="8" fill="#fff" stroke="#c9d3cc"/><text x="734" y="171">3 วัดผล stride 1 / 5 / 10</text>
+      <rect x="720" y="196" width="210" height="36" rx="8" fill="#e7f1ec" stroke="#2B7051"/><text x="734" y="219">4 ด่าน release_gate.py</text>
+      <rect x="720" y="244" width="100" height="36" rx="8" fill="#fff" stroke="#c9d3cc"/><text x="732" y="267">ผ่าน: deploy</text>
+      <rect x="830" y="244" width="100" height="36" rx="8" fill="#fbeceb" stroke="#e0b4b0"/><text x="840" y="267">ไม่ผ่าน: ย้อน</text>
+    </g>
+  </g>
+  <g stroke="#2B7051" stroke-width="2" fill="none" marker-end="url(#ar)">
+    <path d="M190 114v12"/><path d="M350 309h70"/><path d="M535 172v12"/><path d="M640 220h70"/><path d="M825 88v10"/><path d="M825 136v10"/><path d="M825 184v10"/><path d="M800 232v10"/>
+    <path d="M820 280q0 40-150 50t-215-40" stroke-dasharray="5 4"/>
+  </g>
+</svg>
+<p class="meta">เส้นประ: โมเดลใหม่ที่ผ่านด่านถูก deploy กลับไปที่ Pages แล้วทุกเครื่องได้เมื่อเปิดแอปครั้งถัดไป (คลังปลาถูกย้ายให้อัตโนมัติ ชื่อเดิมอยู่ครบ)</p>
+</div>
+
+<h2 id="frame">4. แต่ละรอบตรวจจับทำอะไร<span class="en">Per detector pass</span></h2>
+<div class="card">
+<ol>
+  <li><b>จับภาพ</b> เฟรมปัจจุบันเป็น ImageBitmap ส่งเข้า worker (ภาพต้นฉบับไม่ถูกแก้)</li>
+  <li><b>ตรวจจับ</b> ปลาและผิวน้ำ ตัดปลานอกบ่อ ทำ NMS (<code>models.js detect</code>)</li>
+  <li><b>ติดตาม</b> ByteTrack-lite + ชดเชยกล้องส่าย, track ที่หายไปลืมหลัง 2.5 วินาที หรือ 45 รอบ (<code>tracker.js</code>)</li>
+  <li><b>นับ</b> เห็นซ้ำ 3 รอบ, ไม่นิ่งเหมือนหิน, พื้นที่ไม่กระพริบเหมือนแสง (เกณฑ์ 0.45 เครื่องเร็ว / 0.55 เครื่องช้า), ค่ากลาง 5 รอบ</li>
+  <li><b>จำหน้า</b> track ที่ถึงเวลา (ทุก 0.27 วินาที ไม่เกิน 6 ตัวต่อรอบ) ได้ crop มาตรฐาน (หัวขวา แกนตัวแนวนอน) แล้ว embedding, ตัดแสงสะท้อน</li>
+  <li><b>ระบุตัว</b> Hungarian ทั้งเฟรม, โหวตต่อ track, red flags, ตั้งชื่อ (<code>reid.js step</code>)</li>
+  <li><b>วาด</b> ทุกเฟรมวิดีโอ: กรอบและป้ายไหลเข้าหาเป้าหมาย 0.15 วินาที, สีตัวอักษรขาว/ดำตามภาพ</li>
+</ol>
+<p class="meta">ค่าที่ขึ้นกับเวลาถูกนับเป็นวินาที ไม่ใช่จำนวนรอบ เพราะมือถือทำได้ราว 3 รอบต่อวินาที Mac ราว 6 และการวัดผลแบบทุกเฟรม 30</p>
+</div>
+
+<h2 id="identity">5. ตัวตน ชื่อ และ flags<span class="en">Identity, names, green and red flags</span></h2>
+<div class="grid">
+<div class="card"><h3><span class="pill r">Red flags</span> ระบบแก้เอง</h3><ul>
+  <li>ชื่อเดียวกันสองจุดพร้อมกัน: track ที่เข้ากับปลาที่สุดเก็บชื่อ อีก track ถูกบอกว่า "ไม่ใช่ตัวนี้" อาจกลายเป็นปลาหน้าคล้ายตัวใหม่</li>
+  <li>ขนาดต่างจากปลาเกิน 3 sigma: ไม่เรียนรู้มุมใหม่</li>
+  <li>track ที่ชื่อสลับไปมา 2 ครั้ง: ไม่เรียนรู้</li>
+  <li>ภาพจาก track ที่มี red flag ไม่ถูกเก็บเป็นข้อมูลเทรน</li></ul></div>
+<div class="card"><h3><span class="pill g">Green flags</span> เกรดข้อมูล</h3><ul>
+  <li><b>gold</b>: ผู้ใช้ยืนยันเอง</li>
+  <li><b>silver</b>: มั่นใจ, ตามได้ 2 วินาทีขึ้นไป, 3 มุมขึ้นไป, แยกจากตัวคล้ายได้</li>
+  <li><b>bronze</b>: มั่นใจอย่างเดียว หรือระบบติดป้ายเองภายหลัง</li>
+  <li>ปลาที่เห็นพร้อมกันจะไม่ถูกรวมเป็นตัวเดียวกันตลอดไป</li></ul></div>
+<div class="card"><h3>ชื่อเล่น</h3><ul>
+  <li>ภาษาไทยตามสีและสายพันธุ์, ไม่เกิน 10 ตัวอักษร, ไม่ซ้ำ, ไม่มีตัวเลข (ราว 2,000 ชื่อ)</li>
+  <li>ชื่ออัตโนมัติเปลี่ยนตามสีเมื่อสีนิ่ง ชื่อที่ผู้ใช้ตั้งไม่เปลี่ยนและรอดการรวมตัว</li>
+  <li>ปลาที่ข้อมูลยังไม่พอ: รหัสฐาน 16 สองหลักแบบสุ่ม ชั่วคราว</li></ul></div>
+</div>
+
+<h2 id="data">6. ข้อมูลและการซิงก์<span class="en">Data and sync</span></h2>
+<div class="card tw">
+<table>
+<tr><th>ข้อมูล</th><th>ในเครื่อง</th><th>ส่วนกลาง</th><th>กรองอย่างไร</th></tr>
+<tr><td>คลังปลาต่อบ่อ</td><td>IndexedDB <code>koi-id/kv</code> key <code>gallery:&lt;บ่อ&gt;</code></td><td>R2 <code>ponds/&lt;บ่อ&gt;/gallery.json</code> + D1 <code>ponds</code></td><td>ไม่ส่งคลังว่าง</td></tr>
+<tr><td>ภาพปลา (crop)</td><td><code>koi-data/samples</code> 40 ภาพต่อตัว</td><td>R2 <code>samples/&lt;id&gt;.jpg</code> + D1 <code>samples</code></td><td>คุณภาพ q &gt; 0.3, ไม่ซ้ำมุม, ไม่มี red flag, มีเกรด</td></tr>
+<tr><td>เฟรมเต็ม</td><td><code>koi-data/frames</code> ทุก 10 วินาที</td><td>R2 <code>frames/&lt;id&gt;.jpg/.json</code> + D1 <code>frames</code></td><td>คม (Laplacian &ge; 600), แสงสะท้อน &le; 30%, ด้านสั้น &ge; 480 px, ไม่มีคนหรือภาพซ้อน</td></tr>
+<tr><td>ข้อมูลกล้อง</td><td colspan="2">แนบไปกับภาพ (ต้นทาง ความละเอียด เวลาต่อรอบ มือถือหรือไม่)</td><td>ใช้วิเคราะห์ ไม่ใช้ตัดสิน</td></tr>
+</table>
+<h3>API (ต้องมี <code>Authorization: Bearer &lt;รหัสซิงก์&gt;</code>)</h3>
+<table>
+<tr><th>Method</th><th>Path</th><th>ทำอะไร</th></tr>
+<tr><td>GET</td><td><code>/api/ping</code></td><td>ตรวจรหัส</td></tr>
+<tr><td>GET</td><td><code>/api/ponds</code></td><td>รายชื่อบ่อ (ชื่อ ตำแหน่ง จำนวนปลา)</td></tr>
+<tr><td>GET / PUT</td><td><code>/api/pond/:id</code></td><td>ดึง / ส่งคลังของบ่อ (บันทึกล่าสุดชนะ)</td></tr>
+<tr><td>POST</td><td><code>/api/sample</code></td><td>ภาพปลา + ป้าย (ส่งซ้ำได้ ไม่มีภาพ = อัปเดตป้าย)</td></tr>
+<tr><td>POST</td><td><code>/api/frame</code></td><td>เฟรม + ป้ายอัตโนมัติจากตัวตรวจจับ</td></tr>
+</table>
+<p class="meta">รหัสซิงก์เป็น secret ของ Pages (<code>SYNC_TOKEN</code>) ถามได้จากผู้รับผิดชอบโครงการ · R2 เป็นแบบ private · ตำแหน่งบ่อเก็บแบบหยาบราว 100 m · เฟรมอาจมีบุคคล: ข้อมูลส่วนบุคคลตาม PDPA</p>
+</div>
+
+<h2 id="evolve">7. ซ่อมตัวเองและพัฒนาตัวเอง<span class="en">Self-healing and self-evolution</span></h2>
+<div class="grid">
+<div class="card"><h3>ระหว่างใช้งาน (ในเครื่อง)</h3><ul>
+  <li>เพิ่มมุมใหม่ สี และขนาด ให้ปลาที่มั่นใจ</li>
+  <li>รวมตัวซ้ำทุก 30 วินาที (ไม่รวมตัวที่เคยเห็นพร้อมกัน)</li>
+  <li>red flags แยกตัวที่ชนกันเอง</li>
+  <li>ภาพที่ยังไม่แน่ใจ ระบบติดป้ายเองเมื่อคลังรู้จักพอ ไม่ต้องรอผู้ใช้ ค้างเกิน 7 วันทิ้ง</li>
+  <li>ตัวประมวลผลล่ม: สลับไปทำงานในหน้า · แท็บถูกพัก: เล่นต่อเอง · ภาพซ้อนบนจอ: ไม่ติดป้าย</li></ul></div>
+<div class="card"><h3>รอบพัฒนา (<code>auto_evolve.sh</code>)</h3><ul>
+  <li>เริ่มเมื่อมีภาพคัดแล้วใหม่ตั้งแต่ 200 ภาพ</li>
+  <li>เทรนตัวจำหน้าจากคลิปทดสอบ + ข้อมูลส่วนกลาง (ปลาที่เคยเห็นพร้อมกันในบ่อเดียวกัน = คนละตัว)</li>
+  <li>ด่าน: ชื่อซ้ำ &le; 2%, ระบุชื่อไม่ต่ำกว่าเดิมเกิน 3 จุด, นับไม่ต่ำกว่าเดิมเกิน 1, ไม่มี error ทุก stride</li>
+  <li>ผ่าน: deploy เอง · ไม่ผ่าน: ใช้โมเดลเดิม บันทึกใน <code>train/runs/evolve/</code></li></ul></div>
+</div>
+
+<h2 id="files">8. ไฟล์สำคัญ<span class="en">Where things are</span></h2>
+<div class="card tw">
+<table>
+<tr><th>ไฟล์</th><th>หน้าที่</th></tr>
+<tr><td><code>app/app.js</code></td><td>หน้าจอ, ลูปต่อเฟรม, วาด, คลังปลา, บ่อ, sync, เก็บข้อมูล</td></tr>
+<tr><td><code>app/engine.js · worker.js · pipeline.js</code></td><td>คิวคำสั่งไปยัง worker, ตรวจจับ, crop, embedding, วัตถุอื่น, ความคมเฟรม</td></tr>
+<tr><td><code>app/models.js</code></td><td>โหลดโมเดลจากชิ้น, pre/post-processing</td></tr>
+<tr><td><code>app/tracker.js</code></td><td>ติดตาม, นับ, ต่อ track ที่ดำน้ำ</td></tr>
+<tr><td><code>app/reid.js</code></td><td>คลัง, ให้คะแนน, red/green flags, ชื่อ, ขนาด, บันทึก</td></tr>
+<tr><td><code>app/samples.js · sync.js</code></td><td>ข้อมูลในเครื่องตามบ่อ, ส่งขึ้นส่วนกลาง</td></tr>
+<tr><td><code>app/sw.js</code></td><td>cache offline (เปลี่ยนชื่อ CACHE ทุก deploy, รายการชิ้นโมเดล)</td></tr>
+<tr><td><code>functions/api/[[path]].js · migrations/ · wrangler.toml</code></td><td>API, schema D1, การผูก D1/R2</td></tr>
+<tr><td><code>train/</code></td><td>eval_app.py, eval_summary.py, release_gate.py, overlay_lag.py, replay_id.mjs, curate.py, train_reid.py, export_*.py, split_models.py</td></tr>
+<tr><td><code>deploy.sh · auto_evolve.sh</code></td><td>ส่งขึ้น Pages · รอบพัฒนาตัวเอง</td></tr>
+<tr><td><code>HANDOFF.md · README.md · docs/</code></td><td>สถานะงาน, วิธีใช้, รายงานผล</td></tr>
+</table>
+</div>
+
+<h2 id="run">9. คำสั่งที่ใช้บ่อย<span class="en">Commands</span></h2>
+<div class="card">
+<pre>cd app && npx http-server@14.1.1 -p 8766 -a 127.0.0.1 -c-1 -s        # รันในเครื่อง (ต้องรองรับ HTTP Range)
+node app/tracker.test.mjs                                             # unit tests
+cd train && .venv/bin/python eval_app.py clipA clipB --out=eval_x --qs=stride=10   # วัดผลแบบมือถือ (5 = Mac, 1 = ทุกเฟรม)
+.venv/bin/python release_gate.py eval_base eval_x                     # ด่านปล่อย (ต้องมี _s1 _s5 _s10)
+.venv/bin/python split_models.py                                      # หลัง export โมเดลใหม่ (แล้วแก้จำนวนชิ้นใน sw.js)
+./deploy.sh                                                           # ส่งขึ้น Cloudflare Pages
+DRY=1 ITERS=50 MIN_NEW=0 ./auto_evolve.sh                             # ทดสอบรอบพัฒนาโดยไม่ deploy</pre>
+</div>
+
+<h2 id="numbers">10. ตัวเลขที่วัดได้ล่าสุด<span class="en">Latest measured</span></h2>
+<div class="card tw">
+<table>
+<tr><th>สภาพ</th><th>นับได้ (A / B)</th><th>ระบุชื่อ</th><th>ชื่อซ้ำบนจอ</th></tr>
+<tr><td>มือถือ (stride 10)</td><td>13 / 8</td><td>12% / 23%</td><td>0%</td></tr>
+<tr><td>Mac (stride 5)</td><td>16 / 11</td><td>21% / 35%</td><td>1.3% / 1.5%</td></tr>
+<tr><td>ทุกเฟรม (stride 1)</td><td>18 / 13</td><td>19% / 20%</td><td>0% / 1.4%</td></tr>
+</table>
+<p class="meta">คลิปบ่อจริง 2 คลิป, Chrome headless บน Mac, 25 ต.ค. 2026 · ป้ายอัตโนมัติแบบออฟไลน์นับได้ค่ากลาง 27 / 18 ตัวต่อภาพ (ไม่ใช่การนับด้วยมือ) · ก่อนแก้รอบนี้ มือถือระบุชื่อได้ 4% / 7%</p>
+</div>
+
+<h2 id="traps">11. กับดักที่ควรรู้<span class="en">Traps for the next developer</span></h2>
+<div class="card"><ul>
+  <li>วัดผลแบบทุกเฟรมอย่างเดียวไม่พอ ต้องวัด stride 5 และ 10 ด้วยทุกครั้ง</li>
+  <li>ONNX Runtime Web รันสองโมเดลพร้อมกันไม่ได้ (memory access out of bounds) ให้ผ่าน <code>engine.call</code> เสมอ</li>
+  <li>อย่าแก้ไฟล์ใน app/ ระหว่าง eval กำลังโหลดหน้า (คลิป B จะโหลดโค้ดใหม่กลางทาง)</li>
+  <li>python http.server ไม่รองรับ Range: การเลื่อนทีละเฟรมค้างที่ 0</li>
+  <li>fp16: เก็บ GridSample / TopK / Resize / LayerNorm / Softmax เป็น fp32 · embedder ต้อง bake position embedding (WebGPU bicubic Resize พัง)</li>
+  <li>เปลี่ยน embedder แล้วคลังต้องย้าย: แอปทำเองจากภาพในเครื่อง ชื่ออยู่ครบ</li>
+  <li>เลขปลาเริ่มที่ 1 ในทุกบ่อ: การรวม ลบ คัดภาพ ต้องกรองตามบ่อ</li>
+  <li>zsh ไม่แยกคำใน <code>$var</code>: ใช้ function ที่รับ argument ชัดเจน</li>
+  <li>เทรนบน Mac 16 GB: batch 1, จำกัดหน่วยความจำ MPS, ครอบด้วย caffeinate</li>
+</ul></div>
+
+<h2 id="next">12. งานถัดไป<span class="en">Next steps</span></h2>
+<div class="card tw">
+<table>
+<tr><th>งาน</th><th>ทำไม</th><th>ผู้รับผิดชอบ</th></tr>
+<tr><td>ทดสอบบนมือถือจริงหลายรุ่น</td><td>วัดความเร็วและคุณภาพกล้องจริง</td><td>เจ้าของโครงการ</td></tr>
+<tr><td>ให้รอบพัฒนาเทรนตัวตรวจจับด้วย (ไม่ใช่แค่ตัวจำหน้า)</td><td>เฟรมที่คัดแล้วพร้อมใช้</td><td>เจ้าของโครงการ</td></tr>
+<tr><td>เปลี่ยน curate.py เป็น R2 S3 API เมื่อข้อมูลเกินหลักพัน</td><td>เรียก wrangler ทีละไฟล์ช้า</td><td>เจ้าของโครงการ</td></tr>
+<tr><td>บัญชีผู้ใช้แทนรหัสซิงก์ร่วม</td><td>แยกสิทธิ์ต่อคน ยกเลิกรายคนได้</td><td>เจ้าของโครงการ</td></tr>
+<tr><td>วัตถุนอก COCO (ต้นไม้ ใบไม้ หิน ดอกบัว เต่า)</td><td>ต้องใช้โมเดล open-vocabulary</td><td>เจ้าของโครงการ</td></tr>
+</table>
+</div>
+
+<h2 id="glossary">13. อภิธานศัพท์<span class="en">Glossary</span></h2>
+<div class="card tw">
+<table>
+<tr><th>คำ</th><th>ความหมาย</th></tr>
+<tr><td>PWA</td><td>เว็บแอปที่ติดตั้งลงเครื่องได้และใช้ offline ได้</td></tr>
+<tr><td>Detector pass (รอบตรวจจับ)</td><td>การประมวลผล 1 ภาพ</td></tr>
+<tr><td>Stride</td><td>วัดผลทุก N เฟรม เพื่อจำลองเครื่องที่ช้ากว่า</td></tr>
+<tr><td>Track</td><td>ลำดับกรอบของปลาตัวเดียวกันข้ามเฟรม</td></tr>
+<tr><td>Embedding</td><td>ตัวเลขที่สรุปหน้าตาปลา ปลาตัวเดียวกันได้ค่าใกล้กัน</td></tr>
+<tr><td>Gallery (คลัง)</td><td>ปลาที่รู้จักในบ่อ พร้อมมุมมอง สี ขนาด ชื่อ</td></tr>
+<tr><td>Covis</td><td>คู่ปลาที่เคยเห็นพร้อมกัน จึงเป็นคนละตัวแน่นอน</td></tr>
+<tr><td>Sure-dup (ชื่อซ้ำบนจอ)</td><td>ปลา 2 ตัวบนจอได้ชื่อเดียวกัน</td></tr>
+<tr><td>Release gate</td><td>เกณฑ์ที่โมเดลใหม่ต้องผ่านก่อนปล่อย</td></tr>
+<tr><td>D1 / R2</td><td>ฐานข้อมูล SQLite และที่เก็บไฟล์ของ Cloudflare</td></tr>
+<tr><td>COOP / COEP</td><td>header ที่ทำให้เบราว์เซอร์ใช้หลายเธรดกับ WASM ได้</td></tr>
+</table>
+</div>
+<footer>หน้านี้อยู่ในแอปและใช้ offline ได้ · ไม่มีข้อมูลบัญชีหรือรหัสใดๆ · อัปเดตเมื่อสถาปัตยกรรมเปลี่ยน</footer>
+</main>
+</body>
+</html>

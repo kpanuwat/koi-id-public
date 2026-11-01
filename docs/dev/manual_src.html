@@ -1,0 +1,974 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="คู่มือระบบ Koi ID สำหรับนักพัฒนา (v0.064): สถาปัตยกรรม โหมดการทำงาน โมเดล API ฐานข้อมูล การทดสอบ และแผนงาน">
+<title>Koi ID: คู่มือระบบสำหรับนักพัฒนา (Developer Manual)</title>
+<style>
+  :root{--bg:#f7f7f5;--card:#ffffff;--line:#e5e7eb;--ink:#1b2a22;--mute:#5b6660;--brand:#2B7051;--brand-soft:#e7f1ec;--zebra:#fafbf9;--head:#f2f4f1;--warn:#7a5f00;--warn-soft:#fff7d1;--bad:#b3261e;--bad-soft:#fbeceb;--code:#f5f7f4}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 "Noto Sans Thai","Sukhumvit Set",Thonburi,Sarabun,system-ui,-apple-system,"Segoe UI",sans-serif}
+  svg text{font-family:"Noto Sans Thai","Sukhumvit Set",system-ui,sans-serif}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 16px 56px;display:grid;grid-template-columns:218px minmax(0,1fr);gap:28px;align-items:start}
+  nav.toc{position:sticky;top:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 10px;font-size:13px;max-height:calc(100vh - 24px);overflow:auto}
+  nav.toc .t{font-weight:700;color:var(--mute);font-size:12px;margin:0 0 6px 8px}
+  nav.toc a{display:block;color:var(--ink);text-decoration:none;padding:4px 8px;border-radius:6px;line-height:1.35}
+  nav.toc a:hover{background:var(--brand-soft)}
+  nav.toc a small{display:block;color:var(--mute);font-size:11px}
+  main{min-width:0;max-width:860px}
+  header.hero{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-bottom:8px}
+  h1{font-size:26px;line-height:1.3;margin:4px 0 8px}
+  h2{font-size:21px;line-height:1.35;margin:44px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
+  h2 .no{display:inline-block;min-width:28px;height:28px;line-height:28px;text-align:center;border-radius:8px;background:var(--brand);color:#fff;font-size:14px;margin-right:8px;vertical-align:3px}
+  h2 .en{display:block;color:var(--mute);font-size:13px;font-weight:400;margin:2px 0 0 36px}
+  h3{font-size:16px;line-height:1.4;margin:22px 0 8px}
+  h3 .en{color:var(--mute);font-size:12.5px;font-weight:400;margin-left:6px}
+  p{margin:8px 0 12px}
+  .en{color:var(--mute)}
+  .meta{color:var(--mute);font-size:13px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:12px 0}
+  .callout{border-left:3px solid var(--brand);background:var(--brand-soft);border-radius:0 8px 8px 0;padding:10px 14px;margin:12px 0}
+  .callout.warn{border-color:#d9b600;background:var(--warn-soft)}
+  .callout.bad{border-color:var(--bad);background:var(--bad-soft)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:6px 0}
+  .tw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card);margin:10px 0}
+  .tw table{margin:0;min-width:520px}
+  th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--head);font-weight:600;color:var(--mute);font-size:12.5px}
+  tbody tr:nth-child(even) td{background:var(--zebra)}
+  tr:last-child td{border-bottom:0}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;background:var(--code);border:1px solid #e9ece7;border-radius:4px;padding:0 4px;word-break:break-word}
+  pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;font-size:12.5px;line-height:1.55;margin:10px 0;white-space:pre-wrap;word-break:break-word}
+  pre code{background:none;border:0;padding:0}
+  abbr{text-decoration:underline dotted var(--brand);text-underline-offset:3px;cursor:help}
+  figure{margin:16px 0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+  figure>svg{width:100%;height:auto;display:block}
+  figcaption{color:var(--mute);font-size:13px;margin-top:8px}
+  .shots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0}
+  .shots figure{margin:0;padding:8px}
+  .shots img{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;display:block}
+  .pill{display:inline-block;border-radius:999px;padding:0 9px;font-size:12px;font-weight:600;border:1px solid var(--line);white-space:nowrap;background:var(--card)}
+  .pill.ok{background:var(--brand-soft);color:var(--brand);border-color:#cfe3d8}
+  .pill.bad{background:var(--bad-soft);color:var(--bad);border-color:#f1cfcc}
+  .pill.warn{background:var(--warn-soft);color:var(--warn);border-color:#f3e3a0}
+  .pill.gray{color:var(--mute);background:var(--head)}
+  ul,ol{padding-left:22px;margin:6px 0 12px}
+  li{margin:3px 0}
+  .legend{font-size:12.5px;color:var(--mute);margin:4px 0 0}
+  footer{color:var(--mute);font-size:12.5px;border-top:1px solid var(--line);margin-top:48px;padding-top:12px}
+  @media (max-width:860px){.wrap{grid-template-columns:1fr}nav.toc{position:static;max-height:none}}
+  @media (max-width:560px){.shots{grid-template-columns:1fr}h1{font-size:22px}}
+  @media print{
+    body{background:#fff}
+    nav.toc{display:none}
+    .wrap{display:block;padding:0}
+    main{max-width:none}
+    header.hero,.card,figure,.tw,.callout{break-inside:avoid}
+    h2,h3{break-after:avoid}
+    a{color:inherit;text-decoration:none}
+    @page{size:A4;margin:14mm}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc" aria-label="สารบัญ">
+  <div class="t">สารบัญ (Contents)</div>
+  <a href="#s1">1 สรุปสำหรับนักพัฒนา<small>Developer summary</small></a>
+  <a href="#s2">2 ภาพรวมสถาปัตยกรรม<small>Architecture</small></a>
+  <a href="#s3">3 โหมดการทำงานและสถานะ<small>Modes and status</small></a>
+  <a href="#s4">4 วงจรนับต่อเนื่อง<small>Continuous count loop</small></a>
+  <a href="#s5">5 ข้อค้นพบเรื่อง iPhone<small>iPhone findings</small></a>
+  <a href="#s6">6 โมดูลในโค้ด<small>Code modules</small></a>
+  <a href="#s7">7 โมเดลและการโหลด<small>Models and loading</small></a>
+  <a href="#s8">8 พารามิเตอร์ URL<small>URL parameters</small></a>
+  <a href="#s9">9 ระบบหลังบ้าน<small>Backend, D1, logs</small></a>
+  <a href="#s10">10 พัฒนา ทดสอบ deploy<small>Develop, test, deploy, UAT</small></a>
+  <a href="#s11">11 กฎและกับดัก<small>Rules and traps</small></a>
+  <a href="#s12">12 แผนงานต่อ<small>Roadmap</small></a>
+  <a href="#s13">13 อภิธานศัพท์<small>Glossary</small></a>
+  <a href="#s14">14 ดัชนีไฟล์<small>File index</small></a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <p class="meta">คู่มือนักพัฒนา (developer manual) · ฉบับ v0.064 · commit 17bc76d · อัปเดต 1 พ.ย. 2026</p>
+  <h1>Koi ID: คู่มือระบบสำหรับนักพัฒนา<span class="en" style="display:block;font-size:15px;font-weight:400">Koi ID developer manual</span></h1>
+  <p>คู่มือนี้อธิบายระบบ Koi ID ตามสภาพที่ใช้งานได้จริงในวันนี้ เพื่อให้นักพัฒนาภายนอกรับช่วงต่อได้โดยไม่ต้องเดาจากประวัติการทำงาน แหล่งความจริงของสถานะคือ <code>HANDOFF.md</code> ส่วน CHECKPOINT ส่วนนี้เป็นภาพรวมที่อ้างอิงกลับไปยังโค้ดและบันทึกภาคสนาม ข้อความภาษาอังกฤษในวงเล็บคือคำค้นต่อในเว็บหรือในโค้ด ระบบมีแผนเปิดซอร์สภายใต้ใบอนุญาต Apache-2.0 ผ่านโฟลเดอร์ export ที่ <code>scripts/make_public.sh</code> สร้าง</p>
+  <p class="meta">ที่มาของข้อมูล: โค้ดที่ commit 17bc76d, บันทึก HANDOFF ณ 1 พ.ย. 2026, บันทึกภาคสนามจากตาราง D1 และรายงานทบทวนความปลอดภัย การทดสอบบน production ไม่ได้ทำขึ้นใหม่เพื่อเขียนคู่มือนี้</p>
+  <div class="callout">
+    <b>สัญลักษณ์สถานะ:</b>
+    <span class="pill ok">ยืนยันแล้ว</span> ตรวจจากโค้ด commit หรือบันทึกที่อ้างได้ ·
+    <span class="pill warn">ยังไม่ยืนยัน</span> ยังไม่ได้ตรวจหรือตรวจจากรีโพไม่ได้ (รวมไว้ในหัวข้อ 12) ·
+    <span class="pill bad">ไม่มั่นคง</span> ตายบน iPhone ตามหลักฐาน ·
+    <span class="pill gray">สมมติฐาน</span> ยังไม่ได้ทดสอบแยกองค์ประกอบ
+  </div>
+</header>
+
+<!-- ============================================================ 1 -->
+<h2 id="s1"><span class="no">1</span>สรุปสำหรับนักพัฒนา<span class="en">Developer summary</span></h2>
+
+<h3>1.1 ระบบนี้คืออะไร <span class="en">What it is</span></h3>
+<p>Koi ID เป็น <abbr title="Progressive Web App: เว็บแอปที่เปิดในเบราว์เซอร์และติดตั้งลงหน้าจอได้ ไม่ต้องผ่าน App Store">PWA</abbr> ที่นับปลาคอย (koi) จากภาพถ่าย วิดีโอไฟล์ หรือกล้องสดของโทรศัพท์ ตัวตรวจจับวัตถุคือ <abbr title="YOLOX-tiny: โมเดลตรวจจับวัตถุแบบ one-stage ใบอนุญาต Apache-2.0 ใช้ในโหมดนับ">YOLOX-tiny</abbr> ที่รันบนเครื่องผ่าน <abbr title="ONNX Runtime Web: เอนจินรันโมเดลรูปแบบ ONNX ในเบราว์เซอร์">ONNX Runtime Web</abbr> บน <abbr title="WebGPU: API ประมวลผลกราฟิกและการคำนวณของเบราว์เซอร์ที่ใช้ GPU">WebGPU</abbr> และมี <abbr title="WebAssembly: รูปแบบโค้ดที่รันในเบราว์เซอร์บน CPU ใช้เป็นตัวสำรอง">wasm</abbr> เป็นตัวสำรอง โค้ดเป็น ES module ธรรมดาใน <code>app/</code> ไม่มีตัวรวมโค้ด (bundler) ฝั่งเซิร์ฟเวอร์ใช้ Cloudflare Pages Functions และฐานข้อมูล <abbr title="D1: ฐานข้อมูล SQLite ที่ให้บริการโดย Cloudflare">D1</abbr></p>
+<p>ตั้งแต่ v0.064 โหมดนับเป็นค่าเริ่มต้น จึงไม่ต้องใส่ <code>?count=1</code> แล้ว โหมดเต็มซึ่งมีการระบุตัวปลาและการซิงก์คลังเปิดด้วย <code>?count=0</code> โหมดนับเป็นเส้นทางเดียวที่ได้หลักฐานว่ามั่นคงบน iPhone จึงเป็นจุดเริ่มของการพัฒนาต่อ</p>
+
+<h3>1.2 มั่นคงแค่ไหน <span class="en">Stability at a glance</span></h3>
+<div class="tw"><table>
+<tr><th>ส่วนของระบบ</th><th>สถานะ</th><th>หลักฐาน (evidence)</th></tr>
+<tr><td>วงจรนับต่อเนื่องด้วยกล้อง (autoCount, เก็บสตรีมไว้)</td><td><span class="pill ok">มั่นคงบน iPhone</span></td><td>1,471 รอบใน 3.5 นาที ไม่มีแท็บถูกฆ่า (D1 1178-1198, v63.27)</td></tr>
+<tr><td>นับจากวิดีโอไฟล์</td><td><span class="pill warn">เจ้าของระบบรายงานว่าเล่นได้</span></td><td>ยังไม่มี log ตัวเลขจาก iPhone บน VM ได้ 5-10 รอบต่อวินาที</td></tr>
+<tr><td>ปุ่มถ่ายภาพในโหมดเต็ม (?count=0)</td><td><span class="pill ok">รายงานว่ามั่นคง (รุ่นเก่า)</span></td><td>ประมาณ 30 รูปใน v63.15 ยังไม่ได้ทดสอบซ้ำกับ v63.27 หรือ v0.064</td></tr>
+<tr><td>เปิดกล้องใหม่ทุกรอบ (autoKeep=0)</td><td><span class="pill bad">ไม่มั่นคง</span></td><td>ตายหลัง 8-20 รอบ (D1 1169-1176, v63.26)</td></tr>
+<tr><td>กล้องสดแบบ realtime (?live=1)</td><td><span class="pill bad">ไม่มั่นคง</span></td><td>ตายที่ 1 รอบต่อวินาทีหลัง 15-25 วินาที (D1 1136-1156) ที่ 10 วินาทีต่อรอบอยู่ได้แต่นับไม่ถี่</td></tr>
+<tr><td>ระบุตัวปลาถาวร (?id=1)</td><td><span class="pill bad">ไม่มั่นคง</span></td><td>ตายหลัง 2-3 รูป (v63.24) และหลัง 4-5 รูป (v63.25, D1 944-989)</td></tr>
+<tr><td>โหมดเต็มบน iPhone (?count=0)</td><td><span class="pill bad">เสี่ยง</span></td><td>ใช้หน่วยความจำสูง (คอมเมนต์ใน models.js:9-10 ระบุพีคราว 1.8 GB) ใช้บนเดสก์ท็อปและ eval</td></tr>
+</table></div>
+
+<h3>1.3 เริ่มต้นใน 10 นาที <span class="en">Start in 10 minutes</span></h3>
+<ol>
+<li>อ่าน <code>HANDOFF.md</code> ส่วน CHECKPOINT และไดเรกทอรี <code>docs/claude/</code> (ทิศทางของเจ้าของระบบ)</li>
+<li>Clone รีโพจาก GitHub เข้าไปในโฟลเดอร์รีโพ แล้วรัน <code>./scripts/fetch_artifacts.sh</code> เพื่อดึงไฟล์ใหญ่ราว 580 MB จาก GitHub Release</li>
+<li>ติดตั้ง Node.js (v22 ขึ้นไป) และ Python 3.12 สำหรับโฟลเดอร์ <code>train/</code> ตามขั้นตอนใน <code>SETUP.md</code></li>
+<li>รันเซิร์ฟเวอร์ local: <code>cd app &amp;&amp; npx --yes http-server@14.1.1 -p 8766 -a 127.0.0.1 -c-1 -s</code></li>
+<li>เปิด http://127.0.0.1:8766/ (โหมดนับ) และ http://127.0.0.1:8766/?count=0 (โหมดเต็ม) บน Chrome เดสก์ท็อปก่อนเสมอ</li>
+<li>ตรวจไวยากรณ์ก่อนแก้โมดูล: คัดลอกโมดูลเป็นไฟล์ <code>.mjs</code> ในโฟลเดอร์ชั่วคราว แล้วรัน <code>node --check</code> (ดูหัวข้อ 11)</li>
+<li>ทดสอบรอบนับกับภาพนิ่ง: <code>train/.venv/bin/python -I pending/yolox/count_check.py http://127.0.0.1:8766 &lt;ภาพใต้ app/&gt;</code></li>
+<li>ถ้าแก้การตรวจจับ การติดตาม หรือการนับ ให้รัน eval ก่อนและหลังแก้ (หัวข้อ 10)</li>
+</ol>
+<div class="callout bad">ห้ามส่งคำขอเขียนหรือข้อมูลทดสอบไปยัง production และห้ามรัน <code>wrangler</code> แบบ <code>--remote</code> เพื่อทดสอบ ให้ใช้ <code>wrangler pages dev</code> แบบ local เท่านั้น</div>
+
+<h3>1.4 ผู้อ่านและหัวข้อที่ควรอ่าน <span class="en">Reader map</span></h3>
+<div class="tw"><table>
+<tr><th>บทบาท (Function)</th><th>หัวข้อที่ควรอ่าน</th><th>คำถามที่ตอบได้</th></tr>
+<tr><td>RD / Tech Lead</td><td>2, 4, 5, 6, 9, 10, 11, 12</td><td>ระบบทำงานอย่างไร แก้ตรงไหน ทดสอบอย่างไร</td></tr>
+<tr><td>ML Engineer</td><td>3, 5, 7, 12</td><td>โมเดลไหนในโหมดไหน โหลดอย่างไร เพิ่มโมเดลอย่างไร</td></tr>
+<tr><td>QA</td><td>3, 4, 8, 10, 11</td><td>ผลทดสอบแต่ละโหมด ขั้นตอน eval และ UAT</td></tr>
+<tr><td>IT</td><td>2, 9, 10, 14</td><td>Cloudflare, D1, ความลับ, log, deploy</td></tr>
+<tr><td>PM</td><td>1, 3, 12</td><td>สถานะ ความเสี่ยง แผนงาน</td></tr>
+<tr><td>เจ้าของระบบ (Owner)</td><td>1, 3, 5, 12</td><td>ผลทดสอบและการตัดสินใจที่ค้างอยู่</td></tr>
+<tr><td>MKT/BD, HR, FAC, F&amp;A, WH, SC, PD, NPI, QMS</td><td>1 และ 3</td><td>ไม่ใช่ผู้อ่านหลักของคู่มือนี้ ใช้ดูสถานะและขอบเขต</td></tr>
+</table></div>
+
+<!-- ============================================================ 2 -->
+<h2 id="s2"><span class="no">2</span>ภาพรวมสถาปัตยกรรม<span class="en">Architecture overview</span></h2>
+<p>ระบบแบ่งเป็นสามชั้น ชั้นแรกคือหน้าเว็บและเวิร์กเกอร์บนโทรศัพท์ ชั้นที่สองคือ <abbr title="Service worker: สคริปต์ที่ทำงานเบื้องหลังของเบราว์เซอร์ ใช้แคชไฟล์และดักคำขอ fetch">service worker</abbr> ที่แคชโค้ดและโมเดล ชั้นที่สามคือ Cloudflare ที่เสิร์ฟไฟล์นิ่ง รับคำขอ API และเก็บข้อมูลใน D1 ไฟล์โมเดลเต็มไม่อยู่ใน repo แต่อยู่ใน GitHub Release</p>
+
+<figure>
+<svg viewBox="0 0 960 600" role="img" aria-label="แผนภาพส่วนประกอบของ Koi ID: หน้าเว็บ เวิร์กเกอร์ service worker บนโทรศัพท์ และ Cloudflare Pages, Functions, D1 พร้อม GitHub Release">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b6660"/></marker>
+  </defs>
+  <rect x="16" y="16" width="520" height="470" rx="14" fill="#ffffff" stroke="#cfd6d0" stroke-width="1.2"/>
+  <text x="34" y="42" font-size="15" font-weight="700" fill="#1b2a22">โทรศัพท์ (iPhone หรือ Android, PWA)</text>
+
+  <rect x="40" y="58" width="472" height="112" rx="10" fill="#e7f1ec" stroke="#2B7051"/>
+  <text x="56" y="84" font-size="14" font-weight="700" fill="#1b2a22">หน้าเว็บ (page main thread)</text>
+  <text x="56" y="106" font-size="12.5" fill="#1b2a22">app/index.html, app/app.js: UI, กล้อง, วงจรนับ</text>
+  <text x="56" y="126" font-size="12.5" fill="#1b2a22">คลังปลา, sync, log, tracker.js, follow.js</text>
+  <text x="56" y="146" font-size="12.5" fill="#1b2a22">engine.js: คิวการเรียก ทีละ 1 การอนุมาน</text>
+
+  <rect x="40" y="206" width="472" height="120" rx="10" fill="#f5f7f4" stroke="#5b6660"/>
+  <text x="56" y="232" font-size="14" font-weight="700" fill="#1b2a22">Web Worker (app/worker.js)</text>
+  <text x="56" y="254" font-size="12.5" fill="#1b2a22">pipeline.js: เตรียมเฟรม เรียกตัวตรวจจับ embed</text>
+  <text x="56" y="274" font-size="12.5" fill="#1b2a22">models.js: ONNX Runtime Web (ort.webgpu.min.mjs)</text>
+  <text x="56" y="294" font-size="12.5" fill="#1b2a22">EP: WebGPU ก่อน ถ้าใช้ไม่ได้ใช้ wasm แทน</text>
+  <text x="56" y="314" font-size="12.5" fill="#1b2a22">นับ: koi_yx320 | เต็ม: koi_det_lite16 หรือ koi_det</text>
+
+  <rect x="40" y="350" width="226" height="110" rx="10" fill="#ffffff" stroke="#5b6660"/>
+  <text x="54" y="376" font-size="13" font-weight="700" fill="#1b2a22">Service worker (sw.js)</text>
+  <text x="54" y="398" font-size="12" fill="#1b2a22">CACHE: โค้ดและ SHELL</text>
+  <text x="54" y="418" font-size="12" fill="#1b2a22">MODELS: .onnx, .wasm, .partN</text>
+  <text x="54" y="438" font-size="12" fill="#1b2a22">ใส่ COOP และ COEP ทุกคำตอบ</text>
+
+  <rect x="286" y="350" width="226" height="110" rx="10" fill="#ffffff" stroke="#5b6660"/>
+  <text x="300" y="376" font-size="13" font-weight="700" fill="#1b2a22">พื้นที่เก็บในเครื่อง</text>
+  <text x="300" y="398" font-size="12" fill="#1b2a22">IndexedDB: คลังปลาต่อบ่อ</text>
+  <text x="300" y="418" font-size="12" fill="#1b2a22">localStorage: koi.* (อุปกรณ์, safe)</text>
+  <text x="300" y="438" font-size="12" fill="#1b2a22">Cache Storage: koi-last-video</text>
+
+  <rect x="576" y="16" width="368" height="470" rx="14" fill="#ffffff" stroke="#cfd6d0" stroke-width="1.2"/>
+  <text x="594" y="42" font-size="15" font-weight="700" fill="#1b2a22">Cloudflare</text>
+
+  <rect x="596" y="58" width="328" height="84" rx="10" fill="#ffffff" stroke="#2B7051" stroke-width="1.4"/>
+  <text x="612" y="84" font-size="14" font-weight="700" fill="#1b2a22">Pages (static)</text>
+  <text x="612" y="106" font-size="12" fill="#1b2a22">dist/ คือ app/ ที่ deploy.sh คัดลอกไป</text>
+  <text x="612" y="126" font-size="12" fill="#1b2a22">_headers: COOP และ COEP</text>
+
+  <rect x="596" y="170" width="328" height="100" rx="10" fill="#ffffff" stroke="#2B7051" stroke-width="1.4"/>
+  <text x="612" y="196" font-size="14" font-weight="700" fill="#1b2a22">Pages Functions: /api/*</text>
+  <text x="612" y="218" font-size="12" fill="#1b2a22">functions/api/[[path]].js</text>
+  <text x="612" y="238" font-size="12" fill="#1b2a22">enroll, log, ponds, pond, sample, frame, blob</text>
+  <text x="612" y="258" font-size="12" fill="#1b2a22">ตรวจโทเคนก่อนทุกเส้นทาง ยกเว้น enroll</text>
+
+  <rect x="596" y="298" width="328" height="92" rx="10" fill="#ffffff" stroke="#2B7051" stroke-width="1.4"/>
+  <text x="612" y="324" font-size="14" font-weight="700" fill="#1b2a22">D1: koi-id (SQLite)</text>
+  <text x="612" y="346" font-size="12" fill="#1b2a22">ponds, devices, logs, samples, frames</text>
+  <text x="612" y="366" font-size="12" fill="#1b2a22">gallery_keys, blobs (แทน R2 ที่ยกเลิกแล้ว)</text>
+
+  <rect x="596" y="418" width="328" height="52" rx="10" fill="#fff7d1" stroke="#b8a24a"/>
+  <text x="612" y="440" font-size="13" font-weight="700" fill="#1b2a22">Secret: SYNC_TOKEN (Pages secret)</text>
+  <text x="612" y="458" font-size="12" fill="#1b2a22">ค่าความลับไม่อยู่ในรีโพและไม่อยู่ในเอกสารนี้</text>
+
+  <line x1="160" y1="170" x2="160" y2="206" stroke="#5b6660" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="168" y="192" font-size="11.5" fill="#5b6660">ส่ง ImageBitmap</text>
+  <line x1="330" y1="206" x2="330" y2="170" stroke="#5b6660" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="338" y="192" font-size="11.5" fill="#5b6660">ผลตรวจจับ</text>
+
+  <line x1="596" y1="100" x2="518" y2="100" stroke="#5b6660" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="522" y="90" font-size="11" fill="#5b6660">HTTPS</text>
+  <text x="522" y="118" font-size="11" fill="#5b6660">โหลด app/</text>
+  <line x1="516" y1="220" x2="594" y2="220" stroke="#5b6660" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="520" y="212" font-size="11" fill="#5b6660">/api</text>
+  <text x="520" y="238" font-size="11" fill="#5b6660">โทเคน</text>
+
+  <line x1="760" y1="270" x2="760" y2="296" stroke="#5b6660" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="768" y="286" font-size="11" fill="#5b6660">binding DB</text>
+
+  <rect x="40" y="500" width="880" height="92" rx="10" fill="#ffffff" stroke="#8a96a0" stroke-dasharray="6 4"/>
+  <text x="56" y="526" font-size="13" font-weight="700" fill="#1b2a22">นอกระบบที่ deploy (ไม่อยู่ใน dist)</text>
+  <text x="56" y="548" font-size="12" fill="#1b2a22">GitHub Release (artifacts-v63, artifacts-hn1): ไฟล์ .onnx เต็ม checkpoint คลิปทดสอบ ราว 580 MB</text>
+  <text x="56" y="568" font-size="12" fill="#1b2a22">ดึงด้วย scripts/fetch_artifacts.sh ไปยัง train/ และ pending/</text>
+  <text x="56" y="586" font-size="12" fill="#1b2a22">Google Colab: เทรนและ eval (ค่าเริ่มต้น) | Mac หรือ Linux VM: ทดสอบ local</text>
+</svg>
+<figcaption>รูปที่ 1: ส่วนประกอบและเส้นทางข้อมูล สร้างจากโค้ดที่ commit 17bc76d กรอบประคือส่วนที่ไม่ถูกส่งขึ้น production ลูกศรแสดงการเรียกที่เกิดขึ้นขณะใช้งาน</figcaption>
+</figure>
+
+<h3>2.1 ส่วนประกอบ <span class="en">Components</span></h3>
+<div class="tw"><table>
+<tr><th>ชั้น</th><th>ทำงานที่</th><th>ไฟล์หลัก</th><th>หน้าที่</th></tr>
+<tr><td>หน้าเว็บ (page main thread)</td><td>เบราว์เซอร์ของโทรศัพท์</td><td><code>app/index.html</code>, <code>app/app.js</code>, <code>app/engine.js</code></td><td>UI, กล้องและไฟล์ วงจรนับ คลังปลา sync และ log</td></tr>
+<tr><td>เวิร์กเกอร์ (worker)</td><td>Web Worker แบบโมดูล</td><td><code>app/worker.js</code>, <code>app/pipeline.js</code>, <code>app/models.js</code></td><td>โหลด ONNX session เตรียมเฟรม เรียกโมเดล ครอปและ embed</td></tr>
+<tr><td>service worker</td><td>เบราว์เซอร์</td><td><code>app/sw.js</code></td><td>แคช CACHE (โค้ด) และ MODELS (โมเดลกับ wasm) ใส่ header COOP/COEP</td></tr>
+<tr><td>พื้นที่เก็บในเครื่อง</td><td>เบราว์เซอร์</td><td>IndexedDB, localStorage, Cache Storage</td><td>คลังปลาต่อบ่อ ค่าตั้งของอุปกรณ์ วิดีโอล่าสุด</td></tr>
+<tr><td>Cloudflare Pages (static)</td><td>Cloudflare</td><td><code>deploy.sh</code>, <code>wrangler.toml</code>, <code>dist/_headers</code></td><td>เสิร์ฟไฟล์ app/ ที่ถูกคัดลอกไปยัง dist/</td></tr>
+<tr><td>Pages Functions</td><td>Cloudflare Workers runtime</td><td><code>functions/api/[[path]].js</code></td><td>API ที่ <code>/api/*</code> ตรวจสิทธิ์ อ่านและเขียน D1</td></tr>
+<tr><td>D1</td><td>Cloudflare</td><td><code>migrations/0001</code> ถึง <code>0009</code></td><td>ฐานข้อมูล: บ่อ อุปกรณ์ log ตัวอย่าง และบล็อบ (R2 ถูกยกเลิกเมื่อ 30 ต.ค. 2026)</td></tr>
+<tr><td>ความลับ (secret)</td><td>Pages secret</td><td><code>SYNC_TOKEN</code></td><td>โทเคนผู้ดูแลและเกลือของแฮช IP (ไม่มีค่าในเอกสาร)</td></tr>
+<tr><td>GitHub Release</td><td>GitHub</td><td>artifacts-v63, artifacts-hn1</td><td>ไฟล์ .onnx เต็ม checkpoint และคลิปทดสอบ ไม่ถูก deploy</td></tr>
+<tr><td>เครื่องพัฒนาและ train</td><td>Mac, Linux VM, Google Colab</td><td><code>train/</code>, <code>pending/</code>, <code>scripts/</code></td><td>eval เทรนโมเดล และเครื่องมือทดสอบ</td></tr>
+</table></div>
+
+<h3>2.2 หลักการออกแบบที่ตัดสินแล้ว <span class="en">Decided design rules</span></h3>
+<ul>
+<li>คงเป็น PWA ไม่ทำ native app และไม่ใช้ App Store ตามทิศทางของเจ้าของระบบ</li>
+<li>การตรวจจับและการนับทำบนเครื่อง งานเบื้องหลังช้าได้ แต่การแสดงผลและการติดตามต้องลื่น</li>
+<li>ความแม่นยำมาจากภาพความละเอียดเต็ม ไม่ย่อภาพเพื่อการคำนวณ (การแสดงผลแยกจากกัน)</li>
+<li>ไม่มีค่าใช้จ่ายใบอนุญาต จึงใช้ YOLOX (Apache-2.0) แทน Ultralytics (AGPL) และใช้ Cloudflare free tier กับ Google Colab</li>
+<li>การอนุมานทีละครั้ง: ONNX Runtime Web ไม่รันสองการอนุมานพร้อมกัน ทุกการเรียกเข้าคิวใน <code>engine.js</code></li>
+<li>การตั้งค่าอัตโนมัติ: บ่อมาจาก GPS ตอนเปิดกล้อง ไม่มีปุ่มซิงก์ให้ผู้ใช้ตั้งเอง</li>
+<li>คลังปลาบนเซิร์ฟเวอร์เป็นแหล่งความจริงเดียวของหมายเลขและชื่อปลา หมายเลขห้ามนำกลับมาใช้ใหม่</li>
+<li>กติกาชื่อปลา: ไม่ซ้ำ ไม่มีตัวเลข ยาวไม่เกิน 10 code point ปลาที่ยังไม่มีชื่อแสดงรหัส 2 หลัก (hex)</li>
+<li>พิกัดบ่อเก็บทศนิยม 3 ตำแหน่งเพื่อความเป็นส่วนตัว และไม่ใช้ข้อมูลภูมิศาสตร์จาก Google หรือ OSM</li>
+<li>นับเฉพาะปลาในน้ำ และไม่แก้ไขพิกเซลของภาพต้นฉบับ</li>
+</ul>
+<p class="meta">ที่มา: บันทึก Owner decisions ใน HANDOFF.md (ณ 26 ต.ค. 2026) ข้อใดยังใช้อยู่ให้ยืนยันกับเจ้าของระบบก่อนเปลี่ยนโค้ด</p>
+
+<h3>2.3 เส้นทางข้อมูล <span class="en">Data paths</span></h3>
+<ul>
+<li><b>นับในเครื่อง (count path):</b> เฟรม (ImageBitmap) ไปยังหน้าเว็บ แล้วไปยังเวิร์กเกอร์ ผ่าน YOLOX แล้วได้กล่องและจำนวนกลับมาวาดบนจอ โหมดนับไม่ดึงหรือส่งคลังปลา แต่ยังลงทะเบียนอุปกรณ์และส่ง log</li>
+<li><b>บ่อและคลังปลา (sync path):</b> หน้าเว็บเรียก <code>/api/*</code> ด้วยโทเคนอุปกรณ์ แล้วเขียนลง D1 ใช้เฉพาะโหมดเต็ม</li>
+<li><b>log (field diagnostics):</b> <code>report()</code> ส่ง <code>POST /api/log</code> เข้าตาราง logs อ่านได้ด้วย SQL (หัวข้อ 9.4)</li>
+</ul>
+
+<!-- ============================================================ 3 -->
+<h2 id="s3"><span class="no">3</span>โหมดการทำงานและสถานะ<span class="en">Modes and status</span></h2>
+<p>โหมดถูกเลือกจาก URL parameter ตอนเปิดหน้า ตารางนี้ใช้ตัดสินว่าจะทดสอบอะไร URL ตัวอย่างใช้โดเมนสาธารณะเพื่ออ้างอิงเท่านั้น และผลทดสอบในตารางเป็นของเวอร์ชันที่ระบุ ไม่ใช่ของ v0.064 เว้นแต่จะระบุไว้</p>
+<div class="tw"><table>
+<tr><th>โหมด (mode)</th><th>URL ตัวอย่าง</th><th>โมเดล (model)</th><th>สถานะ (status)</th><th>หลักฐาน (evidence)</th></tr>
+<tr><td>นับต่อเนื่องด้วยกล้อง (ค่าเริ่มต้น)</td><td><code>https://koi-id.pages.dev/</code></td><td>koi_yx320 (YOLOX-tiny, 320 px)</td><td><span class="pill ok">มั่นคงบน iPhone</span></td><td>v63.27: 1,471 รอบใน 3.5 นาที ไม่ถูกฆ่า (D1 1178-1198)</td></tr>
+<tr><td>นับ เปิดกล้องใหม่ทุกรอบ</td><td><code>?autoKeep=0</code></td><td>koi_yx320</td><td><span class="pill bad">ไม่มั่นคง</span></td><td>v63.26: ตายหลัง 8-20 รอบ (D1 1169-1176)</td></tr>
+<tr><td>นับจากวิดีโอไฟล์</td><td>ปุ่มไฟล์วิดีโอในหน้าหลัก</td><td>koi_yx320</td><td><span class="pill warn">เล่นได้ตามเจ้าของระบบ</span></td><td>VM: 5-10 รอบต่อวินาที (60-130 ms) ยังไม่มี log ตัวเลขบน iPhone</td></tr>
+<tr><td>กล้องสด (live)</td><td><code>?live=1</code></td><td>koi_yx320</td><td><span class="pill bad">ไม่มั่นคง</span></td><td>ตายที่ 1 รอบต่อวินาทีหลัง 15-25 วินาที (D1 1136-1156) ที่ 10 วินาทีต่อรอบไม่ตาย</td></tr>
+<tr><td>ชัตเตอร์ในโหมดนับ</td><td>ปุ่มถ่ายภาพ</td><td>koi_yx320</td><td><span class="pill warn">ยังไม่ได้วัดแยก</span></td><td>ใช้ photoRun เดียวกับรอบนับ แต่ส่ง event photo ทุกครั้ง</td></tr>
+<tr><td>ระบุตัวปลาถาวร (id mode)</td><td><code>?id=1</code> (หรือ <code>?count=1&amp;id=1</code>)</td><td>koi_yx320 + embed.onnx บน wasm</td><td><span class="pill bad">ไม่มั่นคง</span></td><td>ตายหลัง 2-3 รูป (v63.24) และ 4-5 รูป (v63.25)</td></tr>
+<tr><td>ถ่ายภาพในโหมดเต็ม</td><td><code>?count=0</code> แล้วกดถ่ายภาพ</td><td>koi_det_lite16 (iPhone) + embed.onnx</td><td><span class="pill ok">รายงานว่ามั่นคง (รุ่นเก่า)</span></td><td>v63.15: ประมาณ 30 รูปโดยไม่ถูกฆ่า (HANDOFF) ยังไม่ทดสอบซ้ำ</td></tr>
+<tr><td>โหมดเต็มพร้อมวิดีโอและกล้อง</td><td><code>?count=0&amp;full=1</code></td><td>koi_det_lite16 (iPhone) หรือ koi_det (เดสก์ท็อป)</td><td><span class="pill bad">เสี่ยงบน iPhone</span></td><td>ใช้บนเดสก์ท็อปและ eval หน่วยความจำสูง (models.js:9-10)</td></tr>
+<tr><td>โหมดทดสอบ (dev)</td><td><code>?video=URL&amp;mode=every</code>, <code>?photo=URL</code>, <code>?noworker</code></td><td>ตามโหมด</td><td><span class="pill gray">ใช้กับ eval และ UAT</span></td><td>train/eval_app.py ส่ง dump=1 ทำให้ไม่มี log และไม่ลงทะเบียนอุปกรณ์</td></tr>
+</table></div>
+<p>กติกาสั้น: URL ที่ไม่มีพารามิเตอร์ <code>count</code> ทำงานเป็นโหมดนับเสมอ คำสั่ง eval และ SETUP ที่เขียนไว้ก่อน v0.064 จึงได้โหมดนับ ต้องเพิ่ม <code>--qs=count=0</code> เพื่อให้ได้โหมดเต็ม (ดูหัวข้อ 10 และ 11) โค้ดตัดสินโหมดที่ <code>app/app.js:14</code> (COUNT_ONLY) และ <code>app/app.js:17</code> (COUNT_ID) ส่วนปุ่มกล้องตัดสินที่ <code>app/app.js:187</code></p>
+
+<!-- ============================================================ 4 -->
+<h2 id="s4"><span class="no">4</span>วงจรนับต่อเนื่อง<span class="en">Continuous count loop</span></h2>
+<p>เมื่อกดปุ่มกล้องในโหมดนับ ฟังก์ชัน <code>autoCount()</code> ใน <code>app/app.js</code> จะเปิดกล้องหนึ่งครั้ง แล้วทำ "รอบ" ซ้ำโดยไม่มีช่วงพัก แต่ละรอบคัดลอกเฟรมหนึ่งเฟรม ส่งให้เวิร์กเกอร์ตรวจจับ แล้ววาดกรอบและตัวเลขบนจอ ผลของรอบก่อนจะค้างบนจอจนผลรอบใหม่วาดเสร็จ จึงไม่มีจอว่างระหว่างรอบ</p>
+
+<h3>4.1 ขั้นตอนหนึ่งรอบ <span class="en">One round, step by step</span></h3>
+<ol>
+<li>รอเฟรมถัดไปจากวิดีโอที่ซ่อนอยู่ (<code>nextFrame</code> ใช้ requestVideoFrameCallback หรือ timeout 34 ms) แล้วคัดลอกเฟรมลง OffscreenCanvas ใหม่</li>
+<li>ถ้า <code>autoKeep=0</code> จะปิดสตรีมตรงนี้ (โหมดเปิดกล้องใหม่ทุกรอบ ไม่มั่นคง) ค่าเริ่มต้นคือเก็บสตรีมไว้</li>
+<li>เรียก <code>photoRun(bitmap, true)</code> โดยโอนความเป็นเจ้าของ ImageBitmap ด้วย <code>transferToImageBitmap()</code> ทำให้ canvas ว่างโดยไม่ต้องคัดลอกซ้ำ</li>
+<li>ใน <code>photoRun</code> ถ้ามีรอบอื่นทำงานอยู่ (<code>photoBusy</code>) จะคืนค่าทันที ถ้าด้านยาวเกิน 1920 px จะย่อด้วย <code>scaledBitmap</code> วาดลง canvas <code>#view</code> แล้วทำสำเนา <code>nb</code> เป็นพื้นหลังของผลรอบ</li>
+<li><code>engine.detect()</code> ส่ง bitmap ไปเวิร์กเกอร์ด้วย transfer list และคิวการเรียกทำให้มีการอนุมานทีละครั้ง</li>
+<li>ในเวิร์กเกอร์ <code>pipeline.detect</code> วาดภาพลง OffscreenCanvas ที่ใช้ซ้ำ ปิด bitmap แล้วเรียก <code>detectYolox</code>: ย่อแบบ letterbox เป็น 320 x 320 เติมสีเทา rgb(114,114,114) แปลงเป็น tensor float32 ลำดับ BGR ไม่ normalise ตามที่ฝึก แล้วรันโมเดล</li>
+<li>คะแนนของแต่ละกล่องคือ objectness × คะแนนคลาส กรองคะแนนต่ำกว่า 0.2 ตัดกล่องที่เล็กกว่า 4 px แล้วทำ NMS ข้ามคลาสที่ IoU 0.6</li>
+<li>ผลกลับมาที่หน้าเว็บ กรองด้วยคะแนนขั้นต่ำของการนับ (0.5) วาดกรอบ (ถ้าเปิดไว้) และป้ายตัวเลข "ปลาในภาพ" พร้อมจำนวนภาพที่นับแล้ว</li>
+<li>รอบถัดไปเริ่มทันที ตัวนับ <code>rounds</code>, <code>openMs</code>, <code>countMs</code> อัปเดต และทุก 15 วินาทีส่ง event <code>auto</code> ชนิด beat</li>
+</ol>
+
+<figure>
+<svg viewBox="0 0 960 330" role="img" aria-label="เส้นเวลาหนึ่งรอบของวงจรนับ: คัดลอกเฟรม 15 ms, ส่งภาพ, YOLOX ประมาณ 120 ms, วาดผล และรอบถัดไป">
+  <text x="20" y="22" font-size="13" font-weight="700" fill="#1b2a22">หนึ่งรอบ autoCount บน iPhone (หน่วย ms)</text>
+
+  <line x1="150" y1="70" x2="225" y2="70" stroke="#2B7051" stroke-width="1.4"/>
+  <line x1="150" y1="64" x2="150" y2="76" stroke="#2B7051" stroke-width="1.4"/>
+  <line x1="225" y1="64" x2="225" y2="76" stroke="#2B7051" stroke-width="1.4"/>
+  <text x="150" y="58" font-size="11.5" fill="#1b2a22">openMs 7-22 ms (วัดจริง)</text>
+
+  <line x1="225" y1="70" x2="855" y2="70" stroke="#8a6d00" stroke-width="1.4"/>
+  <line x1="225" y1="64" x2="225" y2="76" stroke="#8a6d00" stroke-width="1.4"/>
+  <line x1="855" y1="64" x2="855" y2="76" stroke="#8a6d00" stroke-width="1.4"/>
+  <text x="540" y="58" text-anchor="middle" font-size="11.5" fill="#1b2a22">countMs 116-130 ms (วัดจริง รวม photoRun)</text>
+
+  <text x="20" y="112" font-size="13" font-weight="700" fill="#1b2a22">หน้าเว็บ</text>
+  <text x="20" y="128" font-size="11" fill="#5b6660">(main thread)</text>
+  <rect x="150" y="92" width="75" height="40" rx="6" fill="#e7f1ec" stroke="#2B7051"/>
+  <text x="187" y="116" text-anchor="middle" font-size="11.5" fill="#1b2a22">คัดลอกเฟรม</text>
+  <rect x="225" y="92" width="15" height="40" rx="3" fill="none" stroke="#2B7051" stroke-dasharray="3 2"/>
+  <rect x="240" y="92" width="600" height="40" rx="6" fill="#f5f7f4" stroke="#b5bdb7"/>
+  <text x="540" y="116" text-anchor="middle" font-size="12" fill="#1b2a22">รอผลจากเวิร์กเกอร์ (ส่งภาพ ~3 ms ไม่ได้วัดแยก)</text>
+  <rect x="840" y="92" width="15" height="40" rx="3" fill="none" stroke="#2B7051" stroke-dasharray="3 2"/>
+  <rect x="855" y="92" width="75" height="40" rx="6" fill="none" stroke="#8a96a0" stroke-dasharray="4 3"/>
+  <text x="892" y="116" text-anchor="middle" font-size="11.5" fill="#5b6660">รอบถัดไป</text>
+
+  <text x="20" y="192" font-size="13" font-weight="700" fill="#1b2a22">เวิร์กเกอร์</text>
+  <text x="20" y="208" font-size="11" fill="#5b6660">(ONNX, WebGPU)</text>
+  <rect x="240" y="172" width="600" height="40" rx="6" fill="#fff7d1" stroke="#8a6d00"/>
+  <text x="540" y="196" text-anchor="middle" font-size="12" fill="#1b2a22">YOLOX: letterbox 320, อนุมาน, คัดคะแนน, NMS (ราว 120 ms ประมาณ)</text>
+
+  <path d="M 892 132 L 892 250 L 160 250 L 160 134" fill="none" stroke="#5b6660" stroke-width="1.5" marker-end="url(#arrT)"/>
+  <defs><marker id="arrT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b6660"/></marker></defs>
+  <text x="520" y="240" text-anchor="middle" font-size="12" fill="#1b2a22">วนซ้ำทันที ไม่มีช่วงพัก (ผลรอบก่อนค้างบนจอจนวาดผลใหม่เสร็จ)</text>
+
+  <line x1="150" y1="270" x2="950" y2="270" stroke="#8a96a0"/>
+  <text x="20" y="276" font-size="11" fill="#5b6660">เวลา (ms)</text>
+  <g font-size="11" fill="#5b6660" text-anchor="middle">
+    <line x1="150" y1="270" x2="150" y2="275" stroke="#8a96a0"/><text x="150" y="290">0</text>
+    <line x1="250" y1="270" x2="250" y2="275" stroke="#8a96a0"/><text x="250" y="290">20</text>
+    <line x1="350" y1="270" x2="350" y2="275" stroke="#8a96a0"/><text x="350" y="290">40</text>
+    <line x1="450" y1="270" x2="450" y2="275" stroke="#8a96a0"/><text x="450" y="290">60</text>
+    <line x1="550" y1="270" x2="550" y2="275" stroke="#8a96a0"/><text x="550" y="290">80</text>
+    <line x1="650" y1="270" x2="650" y2="275" stroke="#8a96a0"/><text x="650" y="290">100</text>
+    <line x1="750" y1="270" x2="750" y2="275" stroke="#8a96a0"/><text x="750" y="290">120</text>
+    <line x1="850" y1="270" x2="850" y2="275" stroke="#8a96a0"/><text x="850" y="290">140</text>
+    <line x1="950" y1="270" x2="950" y2="275" stroke="#8a96a0"/><text x="950" y="290">160</text>
+  </g>
+
+  <rect x="20" y="306" width="18" height="10" fill="#e7f1ec" stroke="#2B7051"/>
+  <text x="44" y="315" font-size="11.5" fill="#5b6660">วัดจริงจาก field log</text>
+  <rect x="236" y="306" width="18" height="10" fill="none" stroke="#2B7051" stroke-dasharray="3 2"/>
+  <text x="260" y="315" font-size="11.5" fill="#5b6660">ค่าประมาณ ไม่ได้วัดแยก</text>
+  <text x="520" y="315" font-size="11.5" fill="#5b6660">รอบรวมราว 140 ms = อัตรา 7 รอบต่อวินาที</text>
+</svg>
+<figcaption>รูปที่ 2: เส้นเวลาหนึ่งรอบ ขอบเขตของ openMs และ countMs วัดจริงจาก field log (D1 1178-1198) ความยาวแถบใช้ค่ากลาง ส่วนที่เป็นเส้นประคือค่าประมาณ</figcaption>
+</figure>
+
+<h3>4.2 ตัวเลขจากเครื่องจริง <span class="en">Measured numbers</span></h3>
+<div class="tw"><table>
+<tr><th>ค่า (metric)</th><th>ค่า</th><th>แหล่ง</th><th>ความหมาย</th></tr>
+<tr><td>openMs (รอเฟรม + คัดลอก)</td><td>7-22 ms</td><td>D1 1178-1198</td><td>ชื่อฟิลด์มาจากโหมดเปิดกล้องทุกรอบ ในโหมดเก็บสตรีมวัดตั้งแต่เริ่มรอเฟรมจนคัดลอกเสร็จ (ดูกับดักข้อ 22)</td></tr>
+<tr><td>countMs (photoRun ทั้งหมด)</td><td>116-130 ms</td><td>D1 1178-1198</td><td>รวมการเตรียมภาพ การอนุมาน และการวาดผล</td></tr>
+<tr><td>การอนุมาน YOLOX</td><td>ราว 120 ms</td><td>บันทึกทีม (ค่าประมาณ)</td><td>ส่วนหนึ่งของ countMs ไม่ได้วัดแยกในโค้ด</td></tr>
+<tr><td>อัตรารอบ</td><td>ราว 7 รอบต่อวินาที</td><td>1,471 รอบ / 210 วินาที</td><td>คำนวณได้ 7.0 รอบต่อวินาที</td></tr>
+<tr><td>เวลาต่อรอบรวม</td><td>ราว 140 ms</td><td>คำนวณจากอัตรา</td><td>openMs + countMs</td></tr>
+<tr><td>รอบที่ไม่ถูกฆ่า</td><td>1,471 รอบ</td><td>D1 1178-1198</td><td>หยุดโดยเจ้าของระบบ ไม่ใช่เพราะตาย</td></tr>
+</table></div>
+
+<h3>4.3 ภาพหน้าจอ <span class="en">Screenshots</span></h3>
+<div class="shots">
+<figure>
+  <img src="{{img:start}}" alt="หน้าเริ่มต้นของ Koi ID พร้อมใช้งาน">
+  <figcaption>รูปที่ 3: หน้าเริ่มต้นที่พร้อมใช้งาน ปุ่มล่างคือไฟล์วิดีโอ กล้อง ถ่ายภาพ และคลังปลา ภาพนี้มาจาก v63.27 ป้ายเวอร์ชันจึงยังเป็นเลขเก่า</figcaption>
+</figure>
+<figure>
+  <img src="{{img:auto}}" alt="ผลรอบนับจากกล้อง แสดงกรอบและจำนวนปลา">
+  <figcaption>รูปที่ 4: ผลรอบนับจากกล้อง กรอบทุกตัวและตัวเลข 17 ตัวในภาพ แถบบนแสดงจำนวนปลาและเวลาประมวลผลของภาพ (0.3 วินาที) ป้ายบอกโหมดนับอย่างเดียวและจำนวนภาพที่นับแล้ว (11 ภาพ)</figcaption>
+</figure>
+<figure>
+  <img src="{{img:photo}}" alt="ผลถ่ายภาพหนึ่งภาพในโหมดนับ">
+  <figcaption>รูปที่ 5: ผลถ่ายภาพหนึ่งภาพในโหมดนับ (11 ตัว, 0.4 วินาที, ภาพที่ 1) ใช้เส้นทางการประมวลผลเดียวกับรอบนับ แต่ส่ง event photo ทุกครั้ง</figcaption>
+</figure>
+</div>
+
+<h3>4.4 กติกาของรอบนับ <span class="en">Rules of a round</span></h3>
+<ul>
+<li>รอบนับเป็นการนับอิสระ ปลาที่เห็นในเฟรมนั้นไม่ใช่ยอดรวมของบ่อ และไม่มีการติดตามข้ามรอบ</li>
+<li>รอบนับส่งแบบ quiet จึงไม่มี event <code>photo</code> รายรอบ ให้ดู event <code>auto</code> แทน (หัวข้อ 9.4)</li>
+<li>ถ้า <code>photoRun</code> ถูกคืนค่าทันทีเพราะ <code>photoBusy</code> รอบนั้นจะถูกนับว่าเสร็จทั้งที่ไม่ได้ประมวลผล (กับดักข้อ 21)</li>
+<li>การหยุด: กดปุ่มกล้องอีกครั้ง (<code>stopAuto</code>) แท็บถูกซ่อน <code>pagehide</code> หรือกด Escape</li>
+</ul>
+
+<!-- ============================================================ 5 -->
+<h2 id="s5"><span class="no">5</span>ข้อค้นพบเรื่อง iPhone ฆ่าแท็บ<span class="en">iPhone tab-kill findings</span></h2>
+<p>WebKit บน iPhone ฆ่าแท็บเมื่อหน่วยความจำของหน้าเกินราว 1.25 ถึง 1.5 GB การทดสอบระหว่าง 31 ต.ค. ถึง 1 พ.ย. 2026 ชี้ว่าการเปิดสตรีมกล้องค้างไว้ไม่ใช่สาเหตุหลักที่ทำให้ตาย ส่วนที่ตายคือเส้นทางกล้องสดที่มีลูปเฟรม การติดตาม และ follow</p>
+
+<h3>5.1 ลำดับผลทดสอบ <span class="en">Short timeline</span></h3>
+<div class="tw"><table>
+<tr><th>วันที่ (ไทย)</th><th>เวอร์ชัน</th><th>วิธี</th><th>ผล</th><th>หลักฐาน</th></tr>
+<tr><td>31 ต.ค.</td><td>v63.23</td><td>เพิ่มโหมดนับอย่างเดียว (YOLOX)</td><td>ออกใช้งาน โหมดเดิมไม่เปลี่ยน</td><td>HANDOFF (31 ต.ค. 07:40)</td></tr>
+<tr><td>31 ต.ค.</td><td>v63.24</td><td>ระบุตัวปลาด้วย embedder บน WebGPU</td><td>ตายหลัง 2-3 รูป</td><td>HANDOFF (31 ต.ค. 09:30)</td></tr>
+<tr><td>31 ต.ค. ถึง 1 พ.ย.</td><td>v63.25</td><td>embedder บน wasm</td><td>ตายหลัง 4-5 รูป</td><td>D1 944-989</td></tr>
+<tr><td>ก่อน v63.26</td><td>ไม่ระบุเวอร์ชันในบันทึก</td><td>กล้องสด 1 รอบต่อวินาที (passEvery=1000)</td><td>ตายห้าครั้งภายใน 15-25 วินาที</td><td>D1 1136-1156</td></tr>
+<tr><td>1 พ.ย.</td><td>v63.26</td><td>รอบต่อเนื่อง แต่เปิดกล้องใหม่ทุกรอบ</td><td>ตายหลัง 8-20 รอบ</td><td>D1 1169-1176</td></tr>
+<tr><td>1 พ.ย.</td><td>v63.27</td><td>เก็บสตรีมกล้องไว้ (ค่าเริ่มต้น)</td><td>1,471 รอบใน 3.5 นาที ไม่ถูกฆ่า หยุดโดยเจ้าของระบบ</td><td>D1 1178-1198, tag checkpoint-count-cam</td></tr>
+<tr><td>1 พ.ย.</td><td>v0.064</td><td>โหมดนับเป็นค่าเริ่มต้น</td><td>ยังไม่มีผลทดสอบบน iPhone</td><td>commit 17bc76d</td></tr>
+</table></div>
+
+<figure>
+<svg viewBox="0 0 960 400" role="img" aria-label="แผนภูมิแท่ง: จำนวนรอบและวินาทีก่อนแท็บถูกฆ่าในแต่ละวิธี">
+  <rect x="20" y="16" width="460" height="368" rx="12" fill="#ffffff" stroke="#e5e7eb"/>
+  <text x="36" y="44" font-size="14" font-weight="700" fill="#1b2a22">จำนวนรอบก่อนแท็บถูกฆ่า (rounds)</text>
+
+  <text x="36" y="84" font-size="12.5" font-weight="700" fill="#1b2a22">เปิดกล้องใหม่ทุกรอบ (autoKeep=0)</text>
+  <text x="36" y="102" font-size="11" fill="#5b6660">v63.26, D1 1169-1176</text>
+  <rect x="60" y="112" width="1.9" height="20" fill="#b3261e"/>
+  <rect x="61.9" y="112" width="2.85" height="20" fill="#f0b9b4"/>
+  <text x="60" y="150" font-size="12" font-weight="700" fill="#b3261e">8-20 รอบ, ถูกฆ่า</text>
+
+  <text x="36" y="184" font-size="12.5" font-weight="700" fill="#1b2a22">เปิดกล้องค้างไว้ (autoKeep=1, ค่าเริ่มต้น)</text>
+  <text x="36" y="202" font-size="11" fill="#5b6660">v63.27, D1 1178-1198</text>
+  <rect x="60" y="212" width="349.3" height="20" fill="#2B7051"/>
+  <text x="60" y="250" font-size="12" font-weight="700" fill="#2B7051">1,471 รอบ, ไม่ถูกฆ่า (หยุดโดยเจ้าของระบบ)</text>
+
+  <line x1="60" y1="340" x2="430" y2="340" stroke="#8a96a0"/>
+  <g font-size="11" fill="#5b6660" text-anchor="middle">
+    <line x1="60" y1="340" x2="60" y2="345" stroke="#8a96a0"/><text x="60" y="356">0</text>
+    <line x1="178.75" y1="340" x2="178.75" y2="345" stroke="#8a96a0"/><text x="178.75" y="356">500</text>
+    <line x1="297.5" y1="340" x2="297.5" y2="345" stroke="#8a96a0"/><text x="297.5" y="356">1,000</text>
+    <line x1="416.25" y1="340" x2="416.25" y2="345" stroke="#8a96a0"/><text x="416.25" y="356">1,500</text>
+  </g>
+  <text x="36" y="372" font-size="11" fill="#5b6660">สเกลเชิงเส้น ค่า 8-20 จึงเห็นเป็นเส้นบาง</text>
+
+  <rect x="500" y="16" width="440" height="368" rx="12" fill="#ffffff" stroke="#e5e7eb"/>
+  <text x="516" y="44" font-size="14" font-weight="700" fill="#1b2a22">อายุการทำงานก่อนแท็บถูกฆ่า (seconds)</text>
+
+  <text x="516" y="84" font-size="12.5" font-weight="700" fill="#1b2a22">กล้องสด 1 รอบต่อวินาที (passEvery=1000)</text>
+  <text x="516" y="102" font-size="11" fill="#5b6660">ก่อน v63.26, ตายห้าครั้ง, D1 1136-1156</text>
+  <rect x="520" y="112" width="18.75" height="20" fill="#b3261e"/>
+  <rect x="538.75" y="112" width="12.5" height="20" fill="#f0b9b4"/>
+  <text x="520" y="150" font-size="12" font-weight="700" fill="#b3261e">15-25 วินาที, ถูกฆ่า</text>
+
+  <text x="516" y="184" font-size="12.5" font-weight="700" fill="#1b2a22">กล้องสดทุก 10 วินาที (ค่า iOS เริ่มต้น)</text>
+  <text x="516" y="202" font-size="11" fill="#5b6660">ไม่ถูกฆ่า ระยะเวลาไม่ได้บันทึก</text>
+  <rect x="520" y="212" width="300" height="20" fill="none" stroke="#8a96a0" stroke-dasharray="4 3"/>
+  <text x="528" y="226" font-size="11.5" fill="#5b6660">ไม่มีค่าเวลาที่วัดได้</text>
+
+  <text x="516" y="284" font-size="12.5" font-weight="700" fill="#1b2a22">เปิดกล้องค้างไว้ + นับต่อเนื่อง (v63.27)</text>
+  <text x="516" y="302" font-size="11" fill="#5b6660">1,471 รอบใน 210 วินาที ไม่ถูกฆ่า</text>
+  <rect x="520" y="312" width="262.5" height="20" fill="#2B7051"/>
+  <text x="790" y="327" font-size="12" font-weight="700" fill="#2B7051">210 วินาที</text>
+
+  <line x1="520" y1="340" x2="820" y2="340" stroke="#8a96a0"/>
+  <g font-size="11" fill="#5b6660" text-anchor="middle">
+    <line x1="520" y1="340" x2="520" y2="345" stroke="#8a96a0"/><text x="520" y="356">0</text>
+    <line x1="595" y1="340" x2="595" y2="345" stroke="#8a96a0"/><text x="595" y="356">60</text>
+    <line x1="670" y1="340" x2="670" y2="345" stroke="#8a96a0"/><text x="670" y="356">120</text>
+    <line x1="745" y1="340" x2="745" y2="345" stroke="#8a96a0"/><text x="745" y="356">180</text>
+    <line x1="820" y1="340" x2="820" y2="345" stroke="#8a96a0"/><text x="820" y="356">240 วินาที</text>
+  </g>
+  <text x="516" y="372" font-size="11" fill="#5b6660">หน่วยวินาที ไม่ใช่รอบ สีแดงคือถูกฆ่า สีเขียวคือไม่ถูกฆ่า</text>
+</svg>
+<figcaption>รูปที่ 6: จำนวนรอบ (ซ้าย) และอายุการทำงานเป็นวินาที (ขวา) ก่อนแท็บถูกฆ่า แต่ละแผงใช้สเกลและหน่วยของตัวเอง อ่านข้ามแผงไม่ได้ แถบแดงคือถูกฆ่า แถบเขียวคือไม่ถูกฆ่า เส้นประคือไม่มีค่าที่วัดได้ ค่า 8-20 และ 15-25 เป็นช่วงที่บันทึกไว้ แถบเข้มคือค่าต่ำสุด</figcaption>
+</figure>
+
+<h3>5.2 สมมติฐานที่ยังไม่ได้ยืนยัน <span class="en">Hypotheses, not confirmed</span></h3>
+<p><span class="pill gray">สมมติฐาน</span> เส้นทางกล้องสดที่ตายมีองค์ประกอบที่เส้นทางนับไม่มี ได้แก่ ลูป requestVideoFrameCallback บนวิดีโอที่แสดงผล การใช้ซ้ำของ <code>grabFrame</code> <code>follow.js</code> <code>tracker.js</code> และการวาด canvas ขนาดเท่าเฟรมกล้องซ้ำทุกเฟรม ยังไม่ได้ทดสอบแยกทีละองค์ประกอบ</p>
+
+<h3>5.3 กฎการออกแบบที่ตามมา <span class="en">Design rules from the findings</span></h3>
+<div class="tw"><table>
+<tr><th>รหัส</th><th>กฎ</th><th>เหตุผล</th></tr>
+<tr><td>R1</td><td>เก็บสตรีมกล้องไว้ระหว่างรอบ ห้ามเปิดกล้องใหม่ทุกรอบ</td><td>เปิดใหม่ทุกรอบตายหลัง 8-20 รอบ</td></tr>
+<tr><td>R2</td><td>งานบนกล้องเป็นรอบภาพนิ่ง (photo round) ไม่ใช่ลูปเฟรมสด</td><td>ลูปสดตายแม้ที่ 1 รอบต่อวินาที</td></tr>
+<tr><td>R3</td><td>ส่ง ImageBitmap ให้เวิร์กเกอร์ด้วย transfer และปิด bitmap ทันทีที่ใช้เสร็จ</td><td>ลดสำเนาในหน่วยความจำ</td></tr>
+<tr><td>R4</td><td>มีการอนุมานเดียวในเวลาหนึ่ง ผ่านคิวของ engine</td><td>ONNX Runtime Web ไม่รองรับการอนุมานขนาน</td></tr>
+<tr><td>R5</td><td>โหมดนับไม่โหลด embedder หรือโมเดลที่สองบน WebGPU</td><td>สองโมเดลบน GPU ของ iPhone เพิ่มหน่วยความจำ (ยังไม่ได้วัดแยก)</td></tr>
+<tr><td>R6</td><td>ก่อนอ้างว่าแก้หน่วยความจำได้ ต้องวัดด้วย footprint probe ไม่ใช่ดูว่า "ไม่ตาย" ครั้งเดียว</td><td>หลักฐานต้องวัดซ้ำได้</td></tr>
+<tr><td>R7</td><td>ใช้ event <code>auto</code> (beat ทุก 15 วินาที) เป็นหลักฐานหลักของโหมดนับ</td><td>โหมดนับไม่ส่ง event photo รายรอบ</td></tr>
+<tr><td>R8</td><td>ตัวเลขบน iPhone ทั้งหมดในเอกสารนี้มาจาก v63.x ต้องทดสอบ v0.064 ก่อนอ้าง</td><td>ยังไม่มีผลทดสอบบนโทรศัพท์ของ v0.064</td></tr>
+</table></div>
+
+<!-- ============================================================ 6 -->
+<h2 id="s6"><span class="no">6</span>โมดูลในโค้ด<span class="en">Code modules</span></h2>
+<p>ไม่มีตัวรวมโค้ด ไฟล์ทั้งหมดใน <code>app/</code> เป็น ES module ที่โหลดตรงจาก <code>app/index.html</code> ด้วย <code>&lt;script type="module" src="app.js"&gt;</code> ส่วน deploy.sh คัดลอก app/ ทั้งก้อนไปยัง dist/ ยกเว้นไฟล์โมเดลเต็ม ไฟล์ทดสอบ และโฟลเดอร์ dev</p>
+
+<div class="tw"><table>
+<tr><th>ไฟล์</th><th>ทำงานใน</th><th>บรรทัด (17bc76d)</th><th>หน้าที่</th><th>สัญลักษณ์หลัก (บรรทัด)</th></tr>
+<tr><td><code>app/app.js</code></td><td>หน้าเว็บ</td><td>1,390</td><td>UI กล้องและไฟล์ วงจรนับ คลังปลา sync log และกลไก safe ladder</td><td>BUILD (19), COUNT_ONLY (14), COUNT_ID (17), boot (90), #cam (187), openUrl (281), stop (341), onFrame (353), process (403), countBox (684), stopAuto (774), autoCount (779), photoRun (827), drawPhoto (933)</td></tr>
+<tr><td><code>app/engine.js</code></td><td>หน้าเว็บ</td><td>56</td><td>ตัวจัดการเวิร์กเกอร์ คิวทีละการเรียก ถ้าไม่มี worker ใช้หน้าเว็บแทน</td><td>class Engine (4): start, call, detect, analyze, embedImages</td></tr>
+<tr><td><code>app/worker.js</code></td><td>Web Worker</td><td>12</td><td>รับข้อความและ dispatch ไปยัง pipeline</td><td>onmessage</td></tr>
+<tr><td><code>app/pipeline.js</code></td><td>เวิร์กเกอร์หรือหน้าเว็บ</td><td>83</td><td>เตรียมเฟรม เรียกตัวตรวจจับและ embed คำนวณความคมชัด</td><td>createPipeline (27), detect, analyze, warm</td></tr>
+<tr><td><code>app/models.js</code></td><td>เวิร์กเกอร์หรือหน้าเว็บ</td><td>393</td><td>โหลด session ทีละส่วน เลือกโมเดลตามโหมด detectYolox ครอป embed COCO และ colourMask</td><td>LITE (11), PART (31), modelBytes (32), sessionFrom (54), Models (63), load (64), warm (102), detectYolox (216)</td></tr>
+<tr><td><code>app/reid.js</code></td><td>หน้าเว็บและเวิร์กเกอร์</td><td>729</td><td>ตัวตนปลา คลังตัวอย่าง การตั้งชื่อ การรวมคลัง และการเก็บใน IndexedDB</td><td>Identity (189), StillSession (639), mergeGallery, saveGallery, loadGallery</td></tr>
+<tr><td><code>app/tracker.js</code></td><td>หน้าเว็บ</td><td>195</td><td>ตัวติดตามแบบ ByteTrack-lite จับคู่สองขั้นด้วย IoU และ Hungarian</td><td>Tracker (80): update, spawnTrack, evidence</td></tr>
+<tr><td><code>app/follow.js</code></td><td>หน้าเว็บ</td><td>244</td><td>ให้กรอบเลื่อนตามปลาระหว่างรอบตรวจจับ (block matching บนภาพเทาเล็ก)</td><td>Follow (19): frame, grabVF, reset</td></tr>
+<tr><td><code>app/samples.js</code></td><td>หน้าเว็บ</td><td>172</td><td>เก็บข้อมูลตัวอย่างในเครื่อง IndexedDB koi-data ใช้เฉพาะโหมดเต็ม</td><td>Harvest (53)</td></tr>
+<tr><td><code>app/sync.js</code></td><td>หน้าเว็บ</td><td>42</td><td>ไคลเอนต์ HTTP ของ API: ลงทะเบียน โทเคน ดึงและส่งบ่อ</td><td>Sync (9)</td></tr>
+<tr><td><code>app/sw.js</code></td><td>service worker</td><td>56</td><td>แคช header COOP/COEP แคชโมเดล และย้ายแคชเก่า</td><td>CACHE (2), MODELS (5), install (23), activate (24), fetch (36)</td></tr>
+<tr><td><code>app/index.html</code></td><td>หน้าเว็บ</td><td>141</td><td>DOM และ CSS ลิงก์คู่มือรุ่นก่อนที่บรรทัด 133</td><td>id: cam, photo, file, stop, view, status</td></tr>
+<tr><td><code>app/about.html</code></td><td>หน้าเว็บ</td><td>266</td><td>คู่มือรุ่นก่อนชื่อ "Koi ID Dev Guide" ที่หน้าแรกลิงก์ไว้ (ดูหัวข้อ 12)</td><td>-</td></tr>
+<tr><td><code>app/vendor/</code></td><td>หน้าเว็บและเวิร์กเกอร์</td><td>-</td><td>ONNX Runtime Web (.mjs และ .wasm)</td><td>-</td></tr>
+<tr><td><code>app/models/</code></td><td>หน้าเว็บดึงเอง</td><td>-</td><td>parts.json, coco_classes.json และ *.onnx.partN</td><td>-</td></tr>
+<tr><td><code>app/dev/</code>, <code>app/*.test.mjs</code></td><td>ไม่ถูก deploy</td><td>-</td><td>หน้าทดสอบ และเทสต์ node</td><td>-</td></tr>
+<tr><td><code>functions/api/[[path]].js</code></td><td>Cloudflare Functions</td><td>199</td><td>API ทั้งหมดของระบบ</td><td>onRequest (78)</td></tr>
+<tr><td><code>migrations/</code></td><td>D1</td><td>9 ไฟล์</td><td>สคีมาของ D1 เรียงตามหมายเลข</td><td>0001 ถึง 0009</td></tr>
+</table></div>
+<p class="meta">เทียบกับ commit 41c3941 บรรทัดของ app.js ตั้งแต่บรรทัด 76 เป็นต้นไปเลื่อนลงหนึ่งบรรทัดใน 17bc76d ตัวเลขในตารางนี้อ้างอิง 17bc76d</p>
+
+<!-- ============================================================ 7 -->
+<h2 id="s7"><span class="no">7</span>โมเดลและการโหลด<span class="en">Models and loading</span></h2>
+
+<h3>7.1 โมเดลในระบบ <span class="en">Models in the system</span></h3>
+<div class="tw"><table>
+<tr><th>ไฟล์</th><th>จำนวนส่วน</th><th>ขนาด (bytes)</th><th>ใช้ในโหมด</th><th>หมายเหตุ</th></tr>
+<tr><td>koi_yx320.onnx</td><td>1</td><td>20,191,037</td><td>โหมดนับ (ค่าเริ่มต้น)</td><td>YOLOX-tiny อินพุต 320 เอาต์พุต [1, 2100, 6] ใบอนุญาต Apache-2.0</td></tr>
+<tr><td>koi_det_lite16.onnx</td><td>4</td><td>70,171,881</td><td>iPhone ในโหมดเต็ม (LEAN)</td><td>อินพุต 312 ตามคอมเมนต์ใน models.js (ยังไม่ยืนยันจากไฟล์)</td></tr>
+<tr><td>koi_det.onnx</td><td>4</td><td>71,843,361</td><td>เดสก์ท็อปในโหมดเต็ม</td><td>ตัวตรวจจับแบบ RF-DETR-seg ผลลัพธ์มีมาสก์</td></tr>
+<tr><td>koi_det_lite.onnx</td><td>4</td><td>70,188,537</td><td>ทางเลือกผ่าน <code>?det=koi_det_lite</code></td><td>-</td></tr>
+<tr><td>embed.onnx</td><td>3</td><td>43,847,016</td><td>โหมดเต็ม และ id=1</td><td>embedder สร้างเวกเตอร์ลักษณะปลา ไฟล์เต็มไม่ถูก deploy</td></tr>
+<tr><td>coco_det.onnx</td><td>3</td><td>62,273,143</td><td>วัตถุทั่วไป (COCO)</td><td>ปิดในโหมดนับและบน iPhone</td></tr>
+<tr><td>vendor/ort-wasm-simd-threaded.asyncify.wasm</td><td>-</td><td>ราว 25.7 MB</td><td>ตัวสำรอง wasm ของ ONNX Runtime</td><td>อยู่ในแคช MODELS</td></tr>
+</table></div>
+
+<h3>7.2 ลำดับการโหลด <span class="en">Load sequence</span></h3>
+<ol>
+<li>อ่าน <code>parts.json</code> หนึ่งครั้ง (models.js:33, 66) ชื่อโมเดลถูกตัดสินจาก <code>?det=</code> หรือค่าตามโหมด</li>
+<li>ดาวน์โหลดแต่ละส่วนขนานกัน (<code>fetch</code> ของ <code>&lt;url&gt;.partN</code>) คัดลอกลง Uint8Array ที่ตำแหน่ง i × 20 MiB แล้วตรวจขนาด</li>
+<li>สร้าง session ด้วย <code>sessionFrom</code>: ลอง <code>webgpu</code> ก่อนแล้วจึง <code>wasm</code> ตัวแรกที่สำเร็จชนะ ข้าม webgpu ถ้าไม่มี <code>navigator.gpu</code> และ <code>?ep=wasm</code> บังคับให้ใช้ CPU</li>
+<li>อ่านขนาดอินพุตจากโมเดล (ค่าสำรอง 432 สำหรับตัวตรวจจับแบบ RF-DETR)</li>
+<li>โหมดนับไม่โหลด embedder เว้นแต่ id=1 ซึ่งโหลด embed บน wasm (เว้นแต่ <code>?embEp=webgpu</code>)</li>
+<li>embedTag คือ <code>sha:</code> ตามด้วย 16 hex แรกของ SHA-256 บนตัวอย่าง 16 จุด จุดละ 64 KB รวมความยาว ใช้ตรวจว่าคลังตัวอย่างยังเข้ากับโมเดลเดิม</li>
+<li><code>warm()</code> รันอินพุตศูนย์หนึ่งครั้งห่างจากพร้อมใช้งาน 5 วินาที และไม่รันระหว่างการนับ</li>
+</ol>
+
+<h3>7.3 การเลือก EP และเธรด <span class="en">Execution providers and threads</span></h3>
+<ul>
+<li><abbr title="Execution Provider: แบ็กเอนด์ที่ ONNX Runtime ใช้รันโมเดล เช่น webgpu หรือ wasm">EP</abbr> ลำดับคือ WebGPU ก่อนแล้ว wasm ค่าที่ไม่รู้จักในรีโพใช้ได้เฉพาะ wasm</li>
+<li>จำนวนเธรดคือ 1 เมื่อหน้าไม่ได้ cross-origin isolated หรือเป็นโหมด LEAN ที่มี WebGPU ไม่เช่นนั้นใช้ min(4, จำนวนคอร์) เธรดของ wasm ต้องการ COOP/COEP</li>
+<li>COOP/COEP ตั้งโดย <code>sw.js</code> และโดย <code>dist/_headers</code> ถ้าหน้ายังไม่ isolated ทั้งที่มี controller หน้าจะโหลดซ้ำหนึ่งครั้ง (sessionStorage <code>coi</code>)</li>
+<li>เวิร์กเกอร์เป็น module worker เมื่อมี Worker และ OffscreenCanvas ไม่เช่นนั้นรันในหน้าเว็บ <code>?noworker</code> บังคับให้รันในหน้าเว็บ</li>
+</ul>
+
+<h3>7.4 แคชของ service worker <span class="en">Service worker caches</span></h3>
+<div class="tw"><table>
+<tr><th>แคช</th><th>ชื่อ</th><th>เก็บอะไร</th><th>วิธีอ่าน</th></tr>
+<tr><td>CACHE</td><td><code>koi-id-v0.064</code></td><td>โค้ดและ SHELL เช่น index.html และ app.js</td><td>network first ถ้าไม่ได้จึงใช้แคช</td></tr>
+<tr><td>MODELS</td><td><code>koi-models-8308bccae246</code></td><td>.onnx, .wasm และ .partN</td><td>cache first ไม่สนใจ query string</td></tr>
+<tr><td>แคชเก่า</td><td><code>koi-id-v63.2</code>, <code>koi-id-v63.3</code>, <code>koi-models-20cfd7c3df46</code></td><td>คัดลอกไป MODELS เมื่อ bytes ตรงกัน</td><td>ตอน install</td></tr>
+<tr><td>koi-last-video</td><td><code>koi-last-video</code></td><td>วิดีโอล่าสุดเพื่อเล่นต่อ (ไม่เกิน 30 MB บน iOS และ 300 MB บนแพลตฟอร์มอื่น)</td><td>activate ไม่ลบ</td></tr>
+</table></div>
+<p>activate ลบทุกแคชที่ไม่อยู่ในรายการข้างต้น fetch ข้ามคำขอที่ไม่ใช่ GET, cross-origin, Range และ <code>/api/</code> การติดตั้งจะดึงส่วนของ embedder ด้วยแม้โหมดนับไม่ใช้ ผลต่อหน่วยความจำและข้อมูลมือถือยังไม่ได้วัด (ดูหัวข้อ 12)</p>
+
+<h3>7.5 วิธีเพิ่มโมเดลใหม่ <span class="en">How to add a model</span></h3>
+<ol>
+<li>ส่งออกไฟล์ .onnx จาก <code>train/</code> หรือ Colab แล้ววางไว้นอกโฟลเดอร์ที่ถูก deploy</li>
+<li>รัน <code>train/split_models.py</code> ซึ่งเขียนส่วน <code>app/models/&lt;ชื่อ&gt;.onnx.partN</code> (ส่วนละ 20 MiB = 20,971,520 bytes) และอัปเดต <code>parts.json</code></li>
+<li>เพิ่มการเลือกโมเดลใน <code>app/models.js</code> ตามโหมดและ <code>?det=</code> แล้วตรวจขนาดอินพุตจากไฟล์จริง</li>
+<li>commit ไฟล์ส่วนโมเดล และ <code>app/sw.js</code> เพราะ deploy.sh จะเขียนค่า MODELS ใหม่</li>
+<li>รัน <code>./deploy.sh</code> ถ้าแฮชของ parts และ wasm ไม่ตรงกับ MODELS deploy.sh จะเขียน sw.js แล้วหยุดด้วยรหัสออก 1 ให้ commit sw.js แล้วรันอีกครั้ง</li>
+<li>bump BUILD และ CACHE ตามหัวข้อ 10 เสมอ และบันทึกผลใน HANDOFF.md</li>
+</ol>
+<p>ไฟล์ .onnx เต็มไม่ถูก deploy (deploy.sh ไม่คัดลอก <code>app/models/*.onnx</code>) ไฟล์เต็มเก็บใน GitHub Release และดึงด้วย <code>scripts/fetch_artifacts.sh</code> ค่า MODELS คำนวณจาก <code>sha1</code> ของ <code>app/models/*.onnx.part*</code> และ <code>app/vendor/*.wasm</code> ตัดเหลือ 12 ตัวแรก</p>
+
+<!-- ============================================================ 8 -->
+<h2 id="s8"><span class="no">8</span>พารามิเตอร์ URL<span class="en">URL parameters</span></h2>
+<p>มี 38 ชื่อพารามิเตอร์ที่อ่านจาก <code>app/</code> ค่าเริ่มต้นคือค่าเมื่อไม่ได้ใส่พารามิเตอร์ "เวิร์กเกอร์" หมายถึงค่าที่ app.js ส่งต่อไปยัง URL ของเวิร์กเกอร์ในบรรทัด 105 ทุก log มี URL 80 ตัวอักษรแรกในฟิลด์ <code>qs</code> (อยู่ในข้อมูล diag) ทำให้แยกโหมดจาก log ได้</p>
+<div class="tw"><table>
+<tr><th>#</th><th>พารามิเตอร์</th><th>ค่าเริ่มต้น</th><th>ผล</th><th>ที่อ่าน</th></tr>
+<tr><td>1</td><td><code>count</code></td><td>เปิด (โหมดนับ)</td><td><code>0</code> = โหมดเต็ม ค่าอื่นเป็นโหมดนับ ไม่มี gallery ที่อ่านหรือซิงก์ ปุ่มกล้องเป็น autoCount</td><td>app.js:14, models.js:24</td></tr>
+<tr><td>2</td><td><code>id</code></td><td>ปิด</td><td><code>1</code> ให้หมายเลขปลาถาวรจากคลังกลาง (อ่านอย่างเดียว) โหลด embedder บน wasm</td><td>app.js:17, models.js:26</td></tr>
+<tr><td>3</td><td><code>slowAdapt</code></td><td>SLOW_EMBED ปิด, adaptSlow เปิด</td><td><code>1</code> เพิ่มการ embed บนเครื่องช้า</td><td>app.js:20, 331</td></tr>
+<tr><td>4</td><td><code>maxSide</code></td><td>640 ที่ LEVEL 2 ขึ้นไป ไม่งั้น 0</td><td>ย่อด้านยาวของเฟรมก่อนส่งเวิร์กเกอร์</td><td>app.js:52</td></tr>
+<tr><td>5</td><td><code>grab</code></td><td>canvas บน iOS, bitmap อื่น</td><td><code>canvas</code> ใช้ OffscreenCanvas ตัวเดียวซ้ำ</td><td>app.js:56</td></tr>
+<tr><td>6</td><td><code>embedEvery</code></td><td>8</td><td>จำนวนเฟรมต่อรอบ embed (EMBED_S = n/30 วินาที)</td><td>app.js:64</td></tr>
+<tr><td>7</td><td><code>embedBudget</code></td><td>2 ที่ LEVEL 2+ ไม่งั้น 6</td><td>จำนวน embed สูงสุดต่อรอบตรวจจับ</td><td>app.js:64, 466</td></tr>
+<tr><td>8</td><td><code>dump</code></td><td>ปิด</td><td>debug: ไม่ส่ง log ไม่ลงทะเบียนอุปกรณ์ eval ใช้ค่านี้</td><td>app.js:40, 70, 103</td></tr>
+<tr><td>9</td><td><code>dumpMasks</code></td><td>ปิด</td><td>เก็บข้อมูลมาสก์ใน stats (ต้องมี dump)</td><td>app.js:430</td></tr>
+<tr><td>10</td><td><code>full</code></td><td>ปิด</td><td>แสดงปุ่มไฟล์ กล้อง คลังในโหมดเต็ม (โหมดนับแสดงอยู่แล้ว)</td><td>app.js:73</td></tr>
+<tr><td>11</td><td><code>video</code></td><td>ไม่มี</td><td>เล่น URL นี้เป็นไฟล์ (openUrl) และเปิด full</td><td>app.js:73, 133</td></tr>
+<tr><td>12</td><td><code>mode</code></td><td>every</td><td>สำหรับ ?video: every ไล่เฟรมด้วย seek, realtime เป็นลูปสด</td><td>app.js:133</td></tr>
+<tr><td>13</td><td><code>loop</code></td><td>ปิด</td><td><code>1</code> วนไฟล์ ?video โดยรีโหลดก่อนจบ 0.3 วินาที</td><td>app.js:133, 257</td></tr>
+<tr><td>14</td><td><code>follow</code></td><td>เปิด</td><td><code>0</code> ปิด follow.js</td><td>app.js:76</td></tr>
+<tr><td>15</td><td><code>followHz</code></td><td>15 บน iOS, 30 อื่น</td><td>อัตราเฟรมของ follow</td><td>app.js:76</td></tr>
+<tr><td>16</td><td><code>followMask</code></td><td>เปิด</td><td><code>0</code> ปิดตัวเลือกมาสก์ของ follow</td><td>app.js:76</td></tr>
+<tr><td>17</td><td><code>followVF</code></td><td>เปิด</td><td><code>0</code> ปิดตัวเลือก vf ของ follow</td><td>app.js:76</td></tr>
+<tr><td>18</td><td><code>followGlide</code></td><td>60 ms</td><td>เวลาเลื่อนของกรอบ follow</td><td>app.js:574</td></tr>
+<tr><td>19</td><td><code>passEvery</code></td><td>0 (กล้อง iOS 10000 ms)</td><td>ทดสอบเท่านั้น ระยะขั้นต่ำระหว่างรอบตรวจจับ (ms)</td><td>app.js:79, 84</td></tr>
+<tr><td>20</td><td><code>passDelay</code></td><td>0</td><td>ทดสอบเท่านั้น หน่วงก่อนผลของแต่ละรอบ</td><td>app.js:79, 417</td></tr>
+<tr><td>21</td><td><code>noworker</code></td><td>ปิด</td><td>รันไปป์ไลน์บนเธรดหน้าเว็บ</td><td>app.js:105</td></tr>
+<tr><td>22</td><td><code>photo</code></td><td>ไม่มี</td><td>โหลดรูปจาก URL แล้วรัน photoRun (count_check ใช้)</td><td>app.js:134</td></tr>
+<tr><td>23</td><td><code>photoSide</code></td><td>1920</td><td>ด้านยาวของการประมวลผลภาพ</td><td>app.js:703</td></tr>
+<tr><td>24</td><td><code>photoMin</code></td><td>0.5</td><td>คะแนนขั้นต่ำของการนับภาพ</td><td>app.js:703, tracker.js:73</td></tr>
+<tr><td>25</td><td><code>shotH</code></td><td>1080</td><td>ความสูงกล้องสำหรับชัตเตอร์และรอบนับ</td><td>app.js:732, 781</td></tr>
+<tr><td>26</td><td><code>autoWarm</code></td><td>8</td><td>จำนวนเฟรมที่ข้ามหลังเปิดกล้อง ให้ exposure นิ่ง</td><td>app.js:781</td></tr>
+<tr><td>27</td><td><code>autoKeep</code></td><td>เปิด</td><td><code>0</code> เปิดกล้องใหม่ทุกรอบ (ไม่มั่นคง)</td><td>app.js:781</td></tr>
+<tr><td>28</td><td><code>live</code></td><td>ปิด</td><td><code>1</code> ให้ปุ่มกล้องในโหมดนับใช้กล้องสดแบบเดิม</td><td>app.js:187</td></tr>
+<tr><td>29</td><td><code>cam</code></td><td>720 บน iOS, 1080 อื่น</td><td>ความสูงกล้องสด (กว้างเป็น 16:9)</td><td>app.js:195</td></tr>
+<tr><td>30</td><td><code>stride</code></td><td>1</td><td>stepEvery ก้าวทีละ stride/30 วินาที</td><td>app.js:381</td></tr>
+<tr><td>31</td><td><code>max</code></td><td>ไม่จำกัด</td><td>stepEvery หยุดหลัง N เฟรม</td><td>app.js:381</td></tr>
+<tr><td>32</td><td><code>pondCheckMs</code></td><td>600000</td><td>เวลาขั้นต่ำระหว่างการตรวจบ่อตามตำแหน่ง</td><td>app.js:1086</td></tr>
+<tr><td>33</td><td><code>gallery</code></td><td>ไม่มี</td><td>อ่านคลังจาก URL แทนเซิร์ฟเวอร์ (ใช้กับ dump และ count_check)</td><td>app.js:1222</td></tr>
+<tr><td>34</td><td><code>det</code></td><td>ตามโหมด</td><td>ชื่อไฟล์โมเดลตรวจจับโดยไม่มี .onnx เช่น koi_det_lite16 (ส่งต่อให้เวิร์กเกอร์)</td><td>models.js:67, app.js:105</td></tr>
+<tr><td>35</td><td><code>ep</code></td><td>webgpu แล้ว wasm</td><td>บังคับ EP (ในรีโพใช้เฉพาะ wasm)</td><td>models.js:16, 55</td></tr>
+<tr><td>36</td><td><code>embB</code></td><td>2 ใน LEAN ไม่งั้น 0</td><td>ขนาด batch ของ embedder (0 คือไม่กำหนด)</td><td>models.js:27, 303</td></tr>
+<tr><td>37</td><td><code>embEp</code></td><td>wasm เมื่อ id</td><td><code>webgpu</code> ให้ embedder ของ id บน GPU</td><td>models.js:89</td></tr>
+<tr><td>38</td><td><code>safe</code></td><td>localStorage koi.safe</td><td>ระดับความปลอดภัย 0 ถึง 2 เวิร์กเกอร์รับค่าจากแอป</td><td>models.js:14</td></tr>
+</table></div>
+<p class="meta">พารามิเตอร์ ep, embB, embEp, det และ safe ไม่ได้ถูกอ่านโดยตรงจาก app.js แต่ส่งต่อให้เวิร์กเกอร์ที่บรรทัด 105</p>
+
+<!-- ============================================================ 9 -->
+<h2 id="s9"><span class="no">9</span>ระบบหลังบ้าน<span class="en">Backend: API, D1, logs</span></h2>
+
+<h3>9.1 เส้นทาง API <span class="en">Routes</span></h3>
+<p>API อยู่ภายใต้ <code>/api/*</code> ใน <code>functions/api/[[path]].js</code> ยกเว้น enroll ทุกเส้นทางตรวจโทเคนก่อน เส้นทางที่ไม่รู้จักตอบ 404 หลังผ่านการตรวจ ข้อผิดพลาดตอบ 400 พร้อมข้อความไม่เกิน 200 ตัวอักษร</p>
+<div class="tw"><table>
+<tr><th>วิธี</th><th>เส้นทาง</th><th>สิทธิ์</th><th>อ่านหรือเขียน</th><th>บรรทัด</th></tr>
+<tr><td>POST</td><td><code>/api/enroll</code></td><td>ไม่ต้องมีโทเคน (จำกัดอัตรา)</td><td>ลงทะเบียนอุปกรณ์ เก็บเฉพาะแฮชของโทเคน ได้โทเคนรูปแบบ <code>d.&lt;id&gt;.&lt;secret&gt;</code> จำกัด 10 อุปกรณ์ใหม่ต่อแฮช IP ต่อวัน</td><td>84-94</td></tr>
+<tr><td>GET</td><td><code>/api/ping</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>ตรวจว่าโทเคนใช้ได้ ตอบ ok</td><td>98</td></tr>
+<tr><td>GET</td><td><code>/api/me</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>ตอบจำนวนวันที่ใช้งาน (days) และสิทธิ์ admin</td><td>114</td></tr>
+<tr><td>PUT</td><td><code>/api/blob/&lt;part&gt;?key=&amp;type=</code></td><td>ผู้ดูแลเท่านั้น (ไม่ใช่ผู้ดูแลได้ 403)</td><td>เขียนบล็อบ key ต้องขึ้นต้นด้วย <code>ponds/&lt;id&gt;/</code> แต่ละส่วนไม่เกิน 1 MB</td><td>100-108</td></tr>
+<tr><td>POST</td><td><code>/api/log</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>เพิ่มแถวใน logs ตัด body ที่ 4096 ตัวอักษร</td><td>109-113</td></tr>
+<tr><td>GET</td><td><code>/api/ponds</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>รายการบ่อ เรียงตาม updated_at</td><td>122-125</td></tr>
+<tr><td>GET</td><td><code>/api/pond/&lt;id&gt;?since=</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>ข้อมูลบ่อและคลังปลา ถ้า since ตรงกับ ver จะได้ gallery เป็น null</td><td>126-133</td></tr>
+<tr><td>PUT</td><td><code>/api/pond/&lt;id&gt;</code></td><td>อุปกรณ์หรือผู้ดูแล มีกติกาเพิ่มเติม</td><td>บันทึกคลังแบบ compare-and-swap ตาม base เก็บ 30 เวอร์ชัน ห้ามลด nextFish อุปกรณ์ที่ยังไม่ครบ 3 วันห้ามลบปลาเกิน max(3, 20%)</td><td>134-162</td></tr>
+<tr><td>POST</td><td><code>/api/pond/&lt;id&gt;/merge</code></td><td>อุปกรณ์หรือผู้ดูแล (ดูข้อ 9.6)</td><td>ตั้ง merged_into ให้บ่อ ตอบ 409 ถ้าปลายทางไม่มีหรือถูกรวมไปแล้ว</td><td>115-121</td></tr>
+<tr><td>POST</td><td><code>/api/sample</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>ตัวอย่างปลา (meta JSON และภาพ jpeg/png ไม่เกิน 2 MB) เกรดทองถูกปรับเป็นเงินสำหรับอุปกรณ์ที่ยังไม่ครบ 3 วัน</td><td>164-179</td></tr>
+<tr><td>POST</td><td><code>/api/frame</code></td><td>อุปกรณ์หรือผู้ดูแล</td><td>เฟรม (ภาพ และ dets JSON ไม่เกิน 8 MB)</td><td>180-194</td></tr>
+</table></div>
+
+<h3>9.2 การยืนยันตัวตน <span class="en">Authentication</span></h3>
+<ul>
+<li><b>โทเคนผู้ดูแล (admin):</b> เท่ากับความลับ SYNC_TOKEN เทียบแบบ constant-time ใช้โดยเครื่องมือเท่านั้น ไม่ควรอยู่ในเบราว์เซอร์</li>
+<li><b>โทเคนอุปกรณ์:</b> รูปแบบ <code>d.&lt;id&gt;.&lt;secret&gt;</code> ตรวจด้วย SHA-256 กับ <code>devices.token_hash</code> เบราว์เซอร์เก็บใน localStorage ที่ <code>koi.deviceToken</code></li>
+<li><b>days:</b> นับจำนวนวัน UTC ที่อุปกรณ์เคยใช้งาน อัปเดตไม่เกินครั้งละ 60 วินาที ใช้เป็นเงื่อนไขของเกรดและการลบปลา</li>
+</ul>
+
+<h3>9.3 ตาราง D1 <span class="en">D1 tables</span></h3>
+<div class="tw"><table>
+<tr><th>ตาราง</th><th>migration</th><th>คอลัมน์สำคัญ</th><th>หมายเหตุ</th></tr>
+<tr><td>ponds</td><td>0001, 0003, 0005, 0007, 0008</td><td>id, name, lat, lon, fish, ver, merged_into, next_fish, gkey, updated_at</td><td>ver ใช้กับ compare-and-swap</td></tr>
+<tr><td>samples</td><td>0001, 0002</td><td>id, pond, fish, label, grade, q, len, s, view, tag, hist, at, session, device, img_key, cam</td><td>index samples_pond (pond, fish)</td></tr>
+<tr><td>frames</td><td>0001, 0002</td><td>id, pond, w, h, at, session, device, quality, img_key, dets_key</td><td>index frames_pond (pond, at)</td></tr>
+<tr><td>devices</td><td>0004</td><td>id, token_hash, ip_hash, created, seen, days</td><td>ไม่เก็บโทเคนดิบ</td></tr>
+<tr><td>logs</td><td>0006</td><td>id (AUTOINCREMENT), device, at, ev, data</td><td>at เป็น Unix milliseconds จาก Date.now() ฝั่งเซิร์ฟเวอร์</td></tr>
+<tr><td>gallery_keys</td><td>0008</td><td>pond, ver, key</td><td>ประวัติคีย์ของคลัง</td></tr>
+<tr><td>blobs</td><td>0009</td><td>key, part, type, data (BLOB), at</td><td>PK (key, part) แทน R2 ที่ยกเลิกเมื่อ 30 ต.ค.</td></tr>
+</table></div>
+<p>ตาราง blobs ถูกสร้างตอนรันด้วย <code>CREATE TABLE IF NOT EXISTS</code> ที่ functions บรรทัด 77-83 ซึ่งตรงกับ migration 0009 รูปแบบคีย์ของบล็อบที่ใช้อยู่: <code>ponds/&lt;pond&gt;/gallery.json</code> (ver 0), <code>gallery-v&lt;ver&gt;-&lt;8 hex&gt;.json</code> (การเขียนปัจจุบัน), <code>ponds/&lt;pond&gt;/samples/&lt;id&gt;.jpg</code> และ <code>ponds/&lt;pond&gt;/frames/&lt;id&gt;.jpg</code> กับ <code>.json</code> ส่วน <code>ponds.gkey</code> และ <code>gallery_keys.key</code> ชี้ไปยังคีย์เหล่านี้</p>
+
+<h3>9.4 Log ภาคสนาม <span class="en">Field logs</span></h3>
+<p>ทุกการเรียก <code>report(ev, extra)</code> รวมข้อมูล diag (build, qs, ua, gpu, coi, ios, safe, crashedAt และอื่น ๆ) แล้วส่ง <code>POST /api/log</code> เฉพาะเมื่อมีโทเคนอุปกรณ์และไม่ได้เปิด dump จำกัดไม่เกิน 41 รายการต่อการโหลดหน้า และ body ไม่เกิน 4096 ตัวอักษร ถ้าเกินจะได้ 400 และถูกทิ้งอย่างเงียบ ๆ</p>
+<div class="tw"><table>
+<tr><th>ev</th><th>ส่งเมื่อ</th><th>ฟิลด์สำคัญ</th></tr>
+<tr><td>auto</td><td>เปิด (on) ทุก beat ทุก 15 วินาที ปิด (off) และ fail</td><td>step, keep, warmN, rounds, openMs (เฉลี่ย), countMs (เฉลี่ย), n</td></tr>
+<tr><td>photo</td><td>ชัตเตอร์และถ่ายภาพ (รอบนับไม่ส่ง)</td><td>step, src, count, ids, n, ms, raw, shots, emb, ep, pond, msg</td></tr>
+<tr><td>run</td><td>heartbeat ระหว่างนับวิดีโอ (20 วินาที แล้ว 15 วินาที)</td><td>hb, t, k, n, raw, ms, det, emb, nEmb, fish</td></tr>
+<tr><td>file, loop, tap, cam, resume</td><td>ขั้นการเลือกไฟล์ การวนไฟล์ การแตะ การเปิดกล้อง และการกลับมาหลังตาย</td><td>step, k, msg, w, h, dur</td></tr>
+<tr><td>pond</td><td>เปลี่ยนบ่อ</td><td>from, to, matchedFrom, matchedTo</td></tr>
+<tr><td>loading, loadfail, start, error</td><td>โหลดโมเดล เริ่มต้น และข้อผิดพลาด</td><td>sec, at, msg (ฟิลด์ diag เช่น ep และ loadMs ถูกส่งทุกครั้ง)</td></tr>
+</table></div>
+<p>อ่าน log ด้วยคำสั่งอ่านอย่างเดียวนี้ คำสั่งใช้ <code>--remote</code> จึงอ่านจาก production ให้แทน N ด้วยหมายเลขแถวที่ต้องการเริ่ม</p>
+<pre><code>npx wrangler@4 d1 execute koi-id --remote --command "SELECT id, at, ev, data FROM logs WHERE id &gt; N ORDER BY id" --json</code></pre>
+<p>แยกผลตามโหมดด้วยค่า <code>qs</code> ในฟิลด์ data เช่น ใน SQLite ใช้ <code>json_extract(data, '$.qs')</code> แล้วกรองหาแถวที่มี <code>?count=0</code> หรือไม่มี count การประมาณว่ารอบไหนตาย (วิธีประมาณ ไม่ใช่ค่าที่บันทึกโดยตรง) ทำได้โดยดูว่าแถว <code>auto</code> หรือ <code>run</code> ขาดช่วงก่อนแถว <code>start</code> หรือ <code>loading</code> ของการเปิดครั้งถัดไป คอลัมน์ <code>at</code> เป็นเวลาฝั่งเซิร์ฟเวอร์ (Unix milliseconds) ใช้เทียบระยะห่างระหว่างแถวได้</p>
+
+<h3>9.5 ที่เก็บฝั่งเบราว์เซอร์ <span class="en">Client storage</span></h3>
+<div class="tw"><table>
+<tr><th>ที่เก็บ</th><th>คีย์หรือชื่อ</th><th>หน้าที่</th></tr>
+<tr><td>localStorage</td><td><code>koi.device</code></td><td>UUID ของเบราว์เซอร์นี้</td></tr>
+<tr><td>localStorage</td><td><code>koi.deviceToken</code></td><td>โทเคนอุปกรณ์จากการลงทะเบียน</td></tr>
+<tr><td>localStorage</td><td><code>koi.syncToken</code></td><td>อ่านใน sync.js แต่ไม่มีโค้ดใน app/ ที่ตั้งค่านี้ (กับดักข้อ 23)</td></tr>
+<tr><td>localStorage</td><td><code>koi.stage</code></td><td>ขั้นล่าสุด ได้แก่ load, open, run, photo, result หรือ null ถ้าค้างแปลว่ารอบก่อนตาย</td></tr>
+<tr><td>localStorage</td><td><code>koi.safe</code>, <code>koi.safeBuild</code>, <code>koi.cleanRuns</code>, <code>koi.resumes</code></td><td>safe ladder: <code>koi.safe</code> ระดับ 0 ถึง 2, <code>koi.safeBuild</code> คือ build ที่ระดับนี้เป็นของ, <code>koi.cleanRuns</code> นับรันที่อยู่ได้เกิน 60 วินาที, <code>koi.resumes</code> นับการกู้คืนหลังตาย (สูงสุด 3)</td></tr>
+<tr><td>localStorage</td><td><code>koi.boxes</code>, <code>koi.ponds</code>, <code>koi.pond</code>, <code>koi.legacyPond</code></td><td>เปิดปิดกรอบ รายการบ่อ และบ่อที่เลือก</td></tr>
+<tr><td>IndexedDB</td><td><code>koi-id</code> v1, store kv, key <code>gallery:&lt;pond id&gt;</code></td><td>คลังปลาต่อบ่อ (และคีย์ legacy <code>gallery</code>)</td></tr>
+<tr><td>IndexedDB</td><td><code>koi-data</code> v1, stores samples, frames</td><td>ข้อมูลตัวอย่างในเครื่อง ใช้เฉพาะโหมดเต็ม</td></tr>
+<tr><td>Cache Storage</td><td><code>koi-id-&lt;CACHE&gt;</code>, MODELS, <code>koi-last-video</code></td><td>โค้ด โมเดลกับ wasm และวิดีโอล่าสุด</td></tr>
+</table></div>
+<p>กลไกกู้ตัวเอง (safe ladder) ทำงานดังนี้: ถ้า <code>koi.stage</code> ยังค้างตอนเปิดหน้า แปลว่ารอบก่อนตาย ระดับ safe จะเพิ่มขึ้น ถ้ารัน 60 วินาทีขึ้นไปติดกันสามครั้ง ระดับจะลดลงหนึ่ง และเมื่อ BUILD เปลี่ยน ระดับจะรีเซ็ตเป็น 0 ทำให้รอบแรกของ build ใหม่อาจตายซ้ำได้</p>
+
+<h3>9.6 ความปลอดภัยและสิ่งที่ต้องทำก่อนเปิดกว้าง <span class="en">Security before wider use</span></h3>
+<p>Backend ยังไม่พร้อมสำหรับการใช้งานวงกว้างหรือการเปิดซอร์ส รายงาน <code>docs/public/SECURITY_REVIEW.md</code> (1 พ.ย. 2026) ระบุประเด็นระดับสูงและกลางที่ต้องแก้ก่อน ได้แก่ การควบคุมการเข้าถึงรายบ่อ โควตาการใช้งาน การรวมบ่อ และความเป็นส่วนตัวของข้อมูลพิกัดกับข้อมูลอุปกรณ์ เอกสารนี้ไม่ลงรายละเอียดวิธีการโจมตี ให้อ่านรายงานต้นฉบับก่อนแตะ API หรือเปิดสิทธิ์ใหม่ (ดูหัวข้อ 12 ข้อ 4)</p>
+
+<!-- ============================================================ 10 -->
+<h2 id="s10"><span class="no">10</span>วิธีพัฒนา ทดสอบ deploy และ UAT<span class="en">Develop, test, deploy, UAT</span></h2>
+
+<figure>
+<svg viewBox="0 0 960 330" role="img" aria-label="ขั้นตอนการพัฒนาจนถึงการยืนยันบน production: แก้โค้ด ตรวจไวยากรณ์ ทดสอบ local eval bump เวอร์ชัน deploy UAT ทดสอบบนโทรศัพท์ อ่าน D1 และตัดสิน">
+  <defs><marker id="arrW" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b6660"/></marker></defs>
+  <rect x="30" y="34" width="160" height="92" rx="10" fill="#e7f1ec" stroke="#2B7051"/>
+  <text x="42" y="60" font-size="12.5" font-weight="700" fill="#1b2a22">1 แก้โค้ดใน app/</text>
+  <text x="42" y="84" font-size="11" fill="#1b2a22">ทำในกิ่งของตัวเอง</text>
+  <text x="42" y="104" font-size="11" fill="#1b2a22">ห้ามแก้ app/ ตอน eval</text>
+  <rect x="215" y="34" width="160" height="92" rx="10" fill="#e7f1ec" stroke="#2B7051"/>
+  <text x="227" y="60" font-size="12.5" font-weight="700" fill="#1b2a22">2 ตรวจไวยากรณ์</text>
+  <text x="227" y="84" font-size="11" fill="#1b2a22">node --check ด้วย .mjs</text>
+  <text x="227" y="104" font-size="11" fill="#1b2a22">ไม่ตรวจโมดูลตรง ๆ</text>
+  <rect x="400" y="34" width="160" height="92" rx="10" fill="#e7f1ec" stroke="#2B7051"/>
+  <text x="412" y="60" font-size="12.5" font-weight="700" fill="#1b2a22">3 ทดสอบ local</text>
+  <text x="412" y="84" font-size="11" fill="#1b2a22">http-server พอร์ต 8766</text>
+  <text x="412" y="104" font-size="11" fill="#1b2a22">wrangler pages dev (API)</text>
+  <rect x="585" y="34" width="160" height="92" rx="10" fill="#e7f1ec" stroke="#2B7051"/>
+  <text x="597" y="60" font-size="12.5" font-weight="700" fill="#1b2a22">4 eval, count_check</text>
+  <text x="597" y="84" font-size="11" fill="#1b2a22">eval_app.py stride 10/30</text>
+  <text x="597" y="104" font-size="11" fill="#1b2a22">โหมดเต็ม: --qs=count=0</text>
+  <rect x="770" y="34" width="160" height="92" rx="10" fill="#e7f1ec" stroke="#2B7051"/>
+  <text x="782" y="60" font-size="12.5" font-weight="700" fill="#1b2a22">5 เพิ่มเวอร์ชัน</text>
+  <text x="782" y="84" font-size="11" fill="#1b2a22">BUILD: app/app.js:19</text>
+  <text x="782" y="104" font-size="11" fill="#1b2a22">CACHE: app/sw.js:2</text>
+  <rect x="770" y="180" width="160" height="92" rx="10" fill="#fff7d1" stroke="#8a6d00"/>
+  <text x="782" y="206" font-size="12.5" font-weight="700" fill="#1b2a22">6 ./deploy.sh</text>
+  <text x="782" y="230" font-size="11" fill="#1b2a22">ตรวจแฮช MODELS, rsync</text>
+  <text x="782" y="250" font-size="11" fill="#1b2a22">wrangler pages deploy</text>
+  <rect x="585" y="180" width="160" height="92" rx="10" fill="#fff7d1" stroke="#8a6d00"/>
+  <text x="597" y="206" font-size="12.5" font-weight="700" fill="#1b2a22">7 UAT production</text>
+  <text x="597" y="230" font-size="11" fill="#1b2a22">รอ 1 นาทีหลัง deploy</text>
+  <text x="597" y="250" font-size="11" fill="#1b2a22">อ่านอย่างเดียว: uat_vm.py</text>
+  <rect x="400" y="180" width="160" height="92" rx="10" fill="#fff7d1" stroke="#8a6d00"/>
+  <text x="412" y="206" font-size="12.5" font-weight="700" fill="#1b2a22">8 เจ้าของทดสอบ</text>
+  <text x="412" y="230" font-size="11" fill="#1b2a22">ทดสอบจริงบน iPhone</text>
+  <text x="412" y="250" font-size="11" fill="#1b2a22">รายงานผลเป็นข้อความ</text>
+  <rect x="215" y="180" width="160" height="92" rx="10" fill="#fff7d1" stroke="#8a6d00"/>
+  <text x="227" y="206" font-size="12.5" font-weight="700" fill="#1b2a22">9 อ่าน D1 logs</text>
+  <text x="227" y="230" font-size="11" fill="#1b2a22">SELECT เท่านั้น</text>
+  <text x="227" y="250" font-size="11" fill="#1b2a22">แยกโหมดด้วย data.qs</text>
+  <rect x="30" y="180" width="160" height="92" rx="10" fill="#f5f7f4" stroke="#5b6660"/>
+  <text x="42" y="206" font-size="12.5" font-weight="700" fill="#1b2a22">10 ตัดสิน</text>
+  <text x="42" y="230" font-size="11" fill="#1b2a22">ผ่าน: บันทึก HANDOFF</text>
+  <text x="42" y="250" font-size="11" fill="#1b2a22">ไม่ผ่าน: rollback</text>
+  <line x1="190" y1="80" x2="215" y2="80" stroke="#5b6660" stroke-width="1.5" marker-end="url(#arrW)"/>
+  <line x1="375" y1="80" x2="400" y2="80" stroke="#5b6660" stroke-width="1.5" marker-end="url(#arrW)"/>
+  <line x1="560" y1="80" x2="585" y2="80" stroke="#5b6660" stroke-width="1.5" marker-end="url(#arrW)"/>
+  <line x1="745" y1="80" x2="770" y2="80" stroke="#5b6660" stroke-width="1.5" marker-end="url(#arrW)"/>
+  <line x1="770" y1="226" x2="745" y2="226" stroke="#5b6660" stroke-width="1.5" marker-end="url(#arrW)"/>
+  <line x1="585" y1="226" x2="560" y2="226" stroke="#5b6660" stroke-width="1.5" marker-end="url(#arrW)"/>
+  <line x1="400" y1="226" x2="375" y2="226" stroke="#5b6660" stroke-width="1.5" marker-end="url(#arrW)"/>
+  <line x1="215" y1="226" x2="190" y2="226" stroke="#5b6660" stroke-width="1.5" marker-end="url(#arrW)"/>
+  <line x1="850" y1="126" x2="850" y2="180" stroke="#5b6660" stroke-width="1.5" marker-end="url(#arrW)"/>
+  <line x1="110" y1="180" x2="110" y2="128" stroke="#b3261e" stroke-width="1.4" stroke-dasharray="5 3" marker-end="url(#arrW)"/>
+  <text x="118" y="160" font-size="11" fill="#b3261e">ไม่ผ่าน: แก้แล้วกลับข้อ 1</text>
+  <rect x="30" y="290" width="14" height="10" fill="#e7f1ec" stroke="#2B7051"/>
+  <text x="50" y="300" font-size="11.5" fill="#5b6660">ทำบนเครื่องพัฒนา (local)</text>
+  <rect x="260" y="290" width="14" height="10" fill="#fff7d1" stroke="#8a6d00"/>
+  <text x="280" y="300" font-size="11.5" fill="#5b6660">บน production (อ่านอย่างเดียวหรือ deploy)</text>
+  <rect x="650" y="290" width="14" height="10" fill="#f5f7f4" stroke="#5b6660"/>
+  <text x="670" y="300" font-size="11.5" fill="#5b6660">การตัดสิน</text>
+</svg>
+<figcaption>รูปที่ 7: ขั้นตอนการพัฒนาจนถึงการยืนยันบน production ลูกศรประคือการย้อนกลับเมื่อไม่ผ่าน ไม่มีการทดสอบที่เขียนข้อมูลลง production</figcaption>
+</figure>
+
+<h3>10.1 ตารางคำสั่ง <span class="en">Command table</span></h3>
+<div class="tw"><table>
+<tr><th>ขั้น</th><th>คำสั่งหรือไฟล์</th><th>ที่รัน</th><th>หมายเหตุ</th></tr>
+<tr><td>1</td><td>แก้ไขใน <code>app/</code></td><td>เครื่องพัฒนา</td><td>แก้ทีละเรื่อง ห้ามแก้ app/ ระหว่าง eval ทำงาน</td></tr>
+<tr><td>2</td><td>คัดลอกโมดูลเป็น <code>.mjs</code> ในโฟลเดอร์ชั่วคราว แล้วรัน <code>node --check</code></td><td>เครื่องพัฒนา</td><td>ห้ามตรวจโมดูลตรง ๆ (กับดักข้อ 2)</td></tr>
+<tr><td>3</td><td><code>cd app &amp;&amp; npx --yes http-server@14.1.1 -p 8766 -a 127.0.0.1 -c-1 -s</code></td><td>local</td><td>เสิร์ฟ app/ เท่านั้น ไม่เสิร์ฟ dist/ หรือรากรีโพ</td></tr>
+<tr><td>4</td><td><code>wrangler pages dev</code> ที่พอร์ต 8788 พร้อม <code>--persist-to</code> โฟลเดอร์ชั่วคราว</td><td>local</td><td>ทดสอบ API และ D1 แบบ local เท่านั้น ห้ามใช้ <code>--remote</code> เพื่อทดสอบ</td></tr>
+<tr><td>5</td><td><code>train/.venv/bin/python -I pending/yolox/count_check.py &lt;URL&gt; &lt;ภาพ&gt;</code></td><td>local</td><td>ผ่านเมื่อ n มากกว่า 0 กล่องอยู่ในภาพ ไม่มี error ของหน้า ไม่มีคำขอ /api และโหลดเฉพาะ koi_yx320</td></tr>
+<tr><td>6</td><td><code>train/.venv/bin/python eval_app.py clipA clipB --out=... --qs=stride=10 --qs=det=koi_det_lite16</code></td><td>train/</td><td>ทำซ้ำด้วย stride=30 เพิ่ม <code>--qs=count=0</code> สำหรับโหมดเต็ม ต้องมีเซิร์ฟเวอร์ที่พอร์ต 8766</td></tr>
+<tr><td>7</td><td><code>train/.venv/bin/python eval_summary.py &lt;โฟลเดอร์ผล&gt;</code></td><td>train/</td><td>สรุปค่ามัธยฐานการนับ อัตราการระบุชื่อ และชื่อซ้ำต่อคลิป</td></tr>
+<tr><td>8</td><td><code>train/.venv/bin/python release_gate.py &lt;prefix เดิม&gt; &lt;prefix ใหม่&gt;</code></td><td>train/</td><td>โมเดลหรือการติดตามใหม่ต้องไม่แย่กว่าบน clipA และ clipB</td></tr>
+<tr><td>9</td><td>แก้ BUILD ที่ <code>app/app.js:19</code> และ CACHE ที่ <code>app/sw.js:2</code></td><td>เครื่องพัฒนา</td><td>ทุกครั้งก่อน deploy MODELS ให้ deploy.sh เป็นผู้เขียน</td></tr>
+<tr><td>10</td><td><code>./deploy.sh</code></td><td>เครื่องพัฒนา</td><td>ตรวจ MODELS, rsync app/ ไป dist/, เขียน _headers, แล้ว <code>wrangler pages deploy --commit-dirty=true</code></td></tr>
+<tr><td>11</td><td>รอประมาณ 1 นาที แล้วทำ UAT บน production แบบอ่านอย่างเดียว เช่น <code>train/.venv/bin/python scripts/uat_vm.py &lt;URL&gt; &lt;BUILD&gt; iphone</code></td><td>เครื่องพัฒนาหรือ VM</td><td>ราว 3 นาทีต่อรอบบน wasm ไม่มี GPU บน VM</td></tr>
+<tr><td>12</td><td>อ่าน log ด้วย SELECT (หัวข้อ 9.4)</td><td>เครื่องพัฒนา</td><td>อ่านอย่างเดียว</td></tr>
+<tr><td>13</td><td>เจ้าของระบบทดสอบบน iPhone</td><td>iPhone</td><td>รายงานกลับเป็นข้อความ พร้อมเวลาและค่า log ที่เกี่ยวข้อง</td></tr>
+<tr><td>14</td><td>บันทึกผลใน HANDOFF.md และ tag ถ้าเป็นจุดคงที่</td><td>รีโพ</td><td>ตัวอย่าง tag checkpoint-count-cam</td></tr>
+</table></div>
+
+<h3>10.2 หลักการ deploy และ UAT <span class="en">Deploy and UAT rules</span></h3>
+<ul>
+<li>production ใช้งานจริง ห้ามส่งข้อมูลทดสอบหรือคำสั่งเขียนไปยัง production ทดสอบกับ local เท่านั้น</li>
+<li>ห้ามใช้ <code>migrations apply --remote</code> เพราะ remote tracking รู้จักแค่ 0001 ให้ใช้ <code>wrangler d1 execute --remote --file</code> ทีละไฟล์</li>
+<li>bump BUILD และ CACHE ทุกครั้ง ไม่เช่นนั้น service worker อาจไม่ดึงโค้ดใหม่ และ safe ladder จะไม่รีเซ็ต</li>
+<li>การทดสอบที่ต้องใช้ WebGPU รันบน Mac VM Linux แบบ arm64 ไม่มี WebGPU ทำให้เป็น wasm ช้ามาก (HANDOFF ระบุราว 200 วินาทีต่อเฟรม)</li>
+<li>ถ้า UAT ทันทีหลัง deploy เห็นโค้ดเก่า ให้รอประมาณ 1 นาทีแล้วลองใหม่</li>
+<li>ทุกครั้งที่เปิด browser ให้รัน <code>scripts/browser_orphans.sh</code> ซึ่งแสดงรายการเท่านั้น และปิดเฉพาะ PID ที่ตรวจด้วยตนเอง ห้ามฆ่าโปรเซสด้วยชื่อหรือรูปแบบ เพราะอาจกระทบเซสชันอื่น</li>
+</ul>
+
+<h3>10.3 กติกา eval <span class="en">Eval rules</span></h3>
+<p>การเปลี่ยนแปลงที่กระทบการตรวจจับ การติดตาม หรือการนับ ต้องรัน eval ก่อนและหลังด้วย stride 10 และ 30 กับโมเดล lite16 ตามกติกาของโปรเจกต์ โหมดนับเป็นค่าเริ่มต้นตั้งแต่ v0.064 จึงต้องใส่ <code>--qs=count=0</code> ถ้าต้องการวัดโหมดเต็ม ตัวเลข eval ของโหมดนับหลังเปลี่ยนค่าเริ่มต้นยังไม่ได้วัด (ดูหัวข้อ 12)</p>
+<p class="meta">ค่าตั้งต้นของคำสั่งใน SETUP.md ยังไม่มี <code>count=0</code> ดังนั้นคำสั่งนั้นจะได้โหมดนับ</p>
+
+<!-- ============================================================ 11 -->
+<h2 id="s11"><span class="no">11</span>กฎและกับดัก<span class="en">Rules and traps</span></h2>
+<p>รายการนี้รวบรวมจาก CLAUDE.md, HANDOFF.md, SETUP.md และโค้ด ข้อที่ระบุบรรทัดเป็นข้อที่ตรวจในโค้ดแล้ว ข้ออื่นมาจากบันทึกเดิม</p>
+<div class="tw"><table>
+<tr><th>#</th><th>กับดัก</th><th>ทำอย่างไร</th><th>ที่มา</th></tr>
+<tr><td>1</td><td>ห้ามวางโค้ดหลังคอมเมนต์ <code>//</code> ในบรรทัดเดียวกัน เคยทำให้คำสั่งหายไปโดยไม่มี error สองครั้ง</td><td>ใส่คอมเมนต์เป็นบรรทัดของตัวเอง</td><td>CLAUDE.md</td></tr>
+<tr><td>2</td><td><code>node --check</code> ใช้ได้เฉพาะสำเนา .mjs (เคยพลาดการประกาศซ้ำด้วยการตรวจแบบปกติ)</td><td>คัดลอกเป็น .mjs ในโฟลเดอร์ชั่วคราว</td><td>HANDOFF</td></tr>
+<tr><td>3</td><td>iPhone WebKit ฆ่าแท็บที่ราว 1.25 ถึง 1.5 GB</td><td>วัดด้วย footprint probe ก่อนอ้างว่าแก้ได้ (คอมเมนต์ที่ models.js:9-10 ระบุพีค 1.8 GB)</td><td>CLAUDE.md, models.js</td></tr>
+<tr><td>4</td><td>ห้ามทดสอบแบบเขียนหรือทำลายข้อมูลใน production เคยต้องกู้บ่อจาก R2 ก่อนยกเลิก R2</td><td>ใช้ <code>wrangler pages dev</code> และ http-server</td><td>CLAUDE.md, HANDOFF</td></tr>
+<tr><td>5</td><td>Playwright ที่ยิงไป production จะเขียนข้อมูลผ่าน service worker และ page.route ดักคำขอของ SW ไม่ได้</td><td>ทดสอบกับ local</td><td>HANDOFF</td></tr>
+<tr><td>6</td><td>ห้ามใช้ <code>migrations apply --remote</code></td><td>ใช้ <code>d1 execute --file</code> ทีละไฟล์</td><td>SETUP.md</td></tr>
+<tr><td>7</td><td><code>app/models/uat</code> ห้ามมีตอน deploy เพราะ rsync จะส่งไปด้วย ตัวลิงก์สัญลักษณ์ที่ใช้ทดสอบต้องเอาออกก่อน</td><td>ตรวจก่อนรัน deploy.sh (ปัจจุบันไม่มี)</td><td>HANDOFF, deploy.sh:16</td></tr>
+<tr><td>8</td><td>Pages ไม่รองรับ Range request วิดีโอใน video อาจ seek ไม่ได้</td><td>ใช้ไฟล์ทั้งก้อนและทดสอบ seek บน local</td><td>HANDOFF, sw.js:38</td></tr>
+<tr><td>9</td><td>eval: ห้ามแก้ app/ ขณะ eval ทำงาน และ eval จะล้มหลัง 60 วินาทีถ้า root ผิด</td><td>รอให้ eval จบ</td><td>eval_app.py:44-45</td></tr>
+<tr><td>10</td><td>eval_app.py ส่ง <code>dump=1</code> จึงไม่มี log และไม่ลงทะเบียนอุปกรณ์</td><td>ใช้ UAT กับ log ของ production แทน</td><td>eval_app.py:34, app.js:40</td></tr>
+<tr><td>11</td><td>ระบบกู้ตัวเอง: <code>koi.stage</code> ค้างหมายถึงรอบก่อนตาย ระดับ safe จะเพิ่ม และ BUILD ใหม่รีเซ็ตเป็น 0 รอบแรกของ build ใหม่อาจตายซ้ำ</td><td>อ่าน log ของรอบแรกก่อนสรุป</td><td>app.js:27-32</td></tr>
+<tr><td>12</td><td>หมายเลขปลาห้ามนำกลับมาใช้ เซิร์ฟเวอร์ปฏิเสธคลังที่ nextFish ลดลง (409) และอุปกรณ์ที่ยังไม่ครบ 3 วันที่ลบปลาจำนวนมาก (403)</td><td>ห้ามลบกติกานี้ออก</td><td>functions:144, 147-148</td></tr>
+<tr><td>13</td><td>การรวมบ่อที่ตอบ unchanged โดยไม่มีคลัง เคยทำให้เลขปลาในบ่อสลับ</td><td>ห้ามลบการดึงคลังใหม่ฝั่ง client และการปฏิเสธ nextFish ย้อนหลังฝั่งเซิร์ฟเวอร์</td><td>HANDOFF, app.js pullPonds, syncGallery</td></tr>
+<tr><td>14</td><td>body ของ log ถูกตัดที่ 4096 ตัวอักษรก่อน JSON.parse ถ้ายาวกว่านั้นได้ 400 และถูกทิ้งเงียบ ๆ</td><td>ส่ง log ให้สั้น</td><td>functions:110, app.js:40</td></tr>
+<tr><td>15</td><td>log ต่อการโหลดหน้าไม่เกิน 41 รายการ</td><td>ใช้ beat แทน event รายรอบ</td><td>app.js:40</td></tr>
+<tr><td>16</td><td>deploy.sh หยุดเมื่อแฮชโมเดลเปลี่ยน ต้อง commit sw.js แล้วรันใหม่</td><td>ทำตามข้อความที่สคริปต์แสดง</td><td>deploy.sh:12-15</td></tr>
+<tr><td>17</td><td>deploy.sh ใช้ <code>--commit-dirty=true</code> จึงส่งไฟล์ที่ยังไม่ commit ขึ้นไปด้วย</td><td>commit ก่อน deploy หรือรู้ว่ากำลังส่งอะไร</td><td>deploy.sh:19</td></tr>
+<tr><td>18</td><td>CDN อาจส่งโค้ดเดิมได้ราว 1 นาทีหลัง deploy</td><td>รอแล้วทดสอบใหม่</td><td>HANDOFF</td></tr>
+<tr><td>19</td><td>VM Linux แบบ arm64 ไม่มี WebGPU</td><td>ทดสอบที่ต้องใช้ WebGPU บน Mac</td><td>HANDOFF</td></tr>
+<tr><td>20</td><td>URL ที่ไม่มี count ทำงานเป็นโหมดนับตั้งแต่ v0.064 คำสั่ง eval และ SETUP ที่เขียนก่อนหน้าจึงได้โหมดนับ</td><td>เพิ่ม <code>--qs=count=0</code> สำหรับโหมดเต็ม</td><td>app.js:14</td></tr>
+<tr><td>21</td><td><code>photoRun</code> คืนค่าทันทีถ้า <code>photoBusy</code> ยังค้างอยู่ รอบนั้นจึงถูกนับว่าเสร็จโดยไม่ได้ประมวลผล</td><td>ตรวจว่าจำนวนรอบสอดคล้องกับ n ใน log</td><td>app.js:827-828, autoCount</td></tr>
+<tr><td>22</td><td><code>openMs</code> ชื่อมาจากโหมดเปิดกล้องทุกรอบ ในโหมดเก็บสตรีมวัดรวมการรอเฟรม</td><td>อ่านเป็นเวลารอเฟรมและคัดลอกเฟรม (แผนเปลี่ยนชื่อ ดูหัวข้อ 12)</td><td>app.js autoCount</td></tr>
+<tr><td>23</td><td><code>koi.syncToken</code> ถูกอ่านใน sync.js แต่ไม่มีโค้ดใน app/ ที่ตั้งค่านี้</td><td>อย่าตั้งค่าด้วยมือโดยไม่ตรวจก่อน</td><td>sync.js:12</td></tr>
+<tr><td>24</td><td>ข้อความเก่ายังอ้าง R2: คอมเมนต์ใน sync.js:1 และบรรทัดแรกของ migrations/0001 ทั้งที่ R2 ถูกยกเลิกเมื่อ 30 ต.ค. ตาม 0009</td><td>อย่าอ้างข้อความเหล่านั้น</td><td>0009:1</td></tr>
+<tr><td>25</td><td>HANDOFF ระบุว่า 0001 ถึง 0008 ถูก apply แล้ว (26 ต.ค.) 0009 เพิ่มภายหลัง สถานะบน production ยังไม่ยืนยัน</td><td>ตรวจก่อนรันคำสั่งที่กระทบ D1</td><td>HANDOFF</td></tr>
+<tr><td>26</td><td>การพัฒนาตัวเองรายสัปดาห์ถูกปิดไว้ตั้งแต่ 26 ต.ค. แต่ auto_evolve.sh ยังอยู่ที่รากรีโพ</td><td>อย่าเปิด launchd โดยไม่ตรวจ</td><td>HANDOFF</td></tr>
+<tr><td>27</td><td>สาขา wip/v64 ยังไม่เสร็จ และ pending/v64/done_check.sh ที่ HANDOFF อ้างถึงไม่มีในรีโพ</td><td>อย่าอ้างสาขานี้ว่าเป็นสถานะจริง</td><td>SETUP.md:53, HANDOFF</td></tr>
+<tr><td>28</td><td>ในโหมดนับ event photo ไม่ถูกส่งรายรอบ</td><td>ดู event auto</td><td>app.js photoRun</td></tr>
+<tr><td>29</td><td>การรวมบ่อและการเขียนบล็อบผ่าน API ยังไม่ยืนยันว่าตรงกับเจตนาของผู้ออกแบบ</td><td>อ่านข้อ 9.6 ก่อนแก้ route เหล่านี้</td><td>functions:99-121</td></tr>
+<tr><td>30</td><td>ไม่มีไฟล์ LICENSE ที่รากรีโพ ไฟล์สาธารณะ (LICENSE, NOTICE, README) อยู่ในโฟลเดอร์ public/</td><td>ใช้ <code>scripts/make_public.sh</code> สร้างโฟลเดอร์ export ไม่ push</td><td>public/, make_public.sh</td></tr>
+</table></div>
+
+<!-- ============================================================ 12 -->
+<h2 id="s12"><span class="no">12</span>แผนงานต่อ<span class="en">Roadmap</span></h2>
+<p>ข้อเสนอเรียงตามลำดับความสำคัญของผู้พัฒนาต่อ PIC เป็นบทบาท ไม่ใช่ชื่อบุคคล เงื่อนไขเริ่มระบุว่าต้องรอสิ่งใด ความพยายามใช้ S (เล็ก) M (กลาง) L (ใหญ่)</p>
+<div class="tw"><table>
+<tr><th>#</th><th>ข้อเสนอ</th><th>เหตุผล (why)</th><th>ความพยายาม</th><th>PIC (บทบาท)</th><th>เงื่อนไขเริ่ม</th></tr>
+<tr><td>1</td><td>ทดสอบ v0.064 บน iPhone โดยโหมดนับเป็นค่าเริ่มต้น และวัดรอบเป็นตัวเลข</td><td>ยังไม่มีผลบน iPhone ของ v0.064</td><td>S</td><td>QA, เจ้าของระบบ (ทดสอบมือถือ)</td><td>build ใหม่พร้อมแล้ว</td></tr>
+<tr><td>2</td><td>ยืนยันเวอร์ชันบน production สถานะ migration 0009 และจำนวนแถวของ D1</td><td>เอกสารนี้ไม่ได้ตรวจจาก production</td><td>S</td><td>IT</td><td>อ่านอย่างเดียว</td></tr>
+<tr><td>3</td><td>ตัดสินใจเรื่องการติดตามข้ามรอบและยอดรวมของบ่อ</td><td>ตอนนี้แต่ละรอบเป็นอิสระ ยังไม่มียอดบ่อ</td><td>L</td><td>เจ้าของระบบ (ตัดสิน), Tech Lead (ออกแบบ)</td><td>เจ้าของระบบตอบคำถามเรื่องกติกาการนับ</td></tr>
+<tr><td>4</td><td>ปิดประเด็นความปลอดภัยก่อนเปิดกว้าง ได้แก่ การควบคุมเข้าถึงรายบ่อ โควตา และการรวมบ่อ</td><td>รายงาน SECURITY_REVIEW ระบุว่าต้องแก้ก่อน</td><td>M</td><td>Tech Lead, IT</td><td>เจ้าของระบบอนุมัตินโยบายสิทธิ์</td></tr>
+<tr><td>5</td><td>ทำความสะอาดรหัสปลาใน fish.json (ราว 440 รหัสสำหรับปลาจริงราว 50 ตัว)</td><td>ทำให้วัดความแม่นยำจริงได้ ตอนนี้ค่า top-1 ต่ำเกินจริงเพราะปลาตัวเดียวกันมีหลายรหัส</td><td>M</td><td>ML Engineer, QA</td><td>มีป้ายกำกับที่ตรวจแล้ว</td></tr>
+<tr><td>6</td><td>ปรับ embedder ด้วย crop ของ YOLOX (crop C) บน Colab</td><td>ผลวิจัย 31 ต.ค. ชี้ว่าการใช้วงรีแย่กว่า colour mask และการปรับโมเดลเป็นทางที่มีแนวโน้มดีที่สุด (pending/yxid/REPORT.md)</td><td>M</td><td>ML Engineer</td><td>ข้อ 5 เสร็จ</td></tr>
+<tr><td>7</td><td>ลองหัว re-ID แบบ JDE หรือ FairMOT บน YOLOX เป็นเครือข่ายเดียว</td><td>ทางเลือกถ้าข้อ 6 ไม่พอ</td><td>L</td><td>ML Engineer</td><td>ข้อ 5 เสร็จ มิฉะนั้นหัวจะเรียนรู้รหัสผิด</td></tr>
+<tr><td>8</td><td>หาสาเหตุหน่วยความจำของ id=1 บน iPhone (ตายหลัง 4-5 รูป)</td><td>โหมดระบุตัวปลายังไม่มั่นคง</td><td>M</td><td>Tech Lead</td><td>วัดด้วย footprint probe บน Mac</td></tr>
+<tr><td>9</td><td>รัน tracker.test.mjs และ pond.test.mjs บน HEAD</td><td>ยังไม่ยืนยันว่าผ่าน HANDOFF ระบุว่า tracker ล้มบน main ตอน v63</td><td>S</td><td>QA</td><td>ไม่มี</td></tr>
+<tr><td>10</td><td>ตัดสินใจเรื่อง app/about.html (คู่มือรุ่นก่อน) และลิงก์ที่ index.html:133 ให้ชี้มาที่คู่มือนี้หรือรวมกัน</td><td>มีคู่มือสองฉบับ ฉบับในแอปมีตัวเลขเมื่อ 25 ต.ค.</td><td>S</td><td>Tech Lead, เจ้าของระบบ</td><td>เทียบเนื้อหาของ about.html ก่อน</td></tr>
+<tr><td>11</td><td>ล้างข้อความค้างและไฟล์เก่า (sync.js:1, คอมเมนต์ migrations 0001, auto_evolve.sh, wip/v64)</td><td>ลดความสับสนของผู้อ่านรีโพก่อนเปิดซอร์ส</td><td>S</td><td>Tech Lead</td><td>เจ้าของระบบตัดสิน wip/v64</td></tr>
+<tr><td>12</td><td>ตรวจ export ด้วย scripts/make_public.sh และยืนยันว่าไม่มีชื่อหรือเส้นทางส่วนตัวหลงเหลือ</td><td>ก่อนสร้างรีโพสาธารณะ ตามการตัดสินใจ 1 พ.ย. ให้ใช้ประวัติใหม่ Apache-2.0 และเฉพาะโมเดล</td><td>S</td><td>IT, Tech Lead</td><td>ไม่มี</td></tr>
+<tr><td>13</td><td>วัดผลการโหลด embed parts ตอนติดตั้ง service worker บนอุปกรณ์โหมดนับ</td><td>ยังไม่รู้ผลต่อหน่วยความจำและการใช้ข้อมูลมือถือ</td><td>S</td><td>QA</td><td>ไม่มี</td></tr>
+<tr><td>14</td><td>เปลี่ยนชื่อฟิลด์ openMs ให้ตรงกับความหมาย</td><td>ชื่อเดิมทำให้เข้าใจผิดในโหมดเก็บสตรีม</td><td>S</td><td>Tech Lead</td><td>ทำพร้อม build ถัดไป</td></tr>
+<tr><td>15</td><td>ประเมิน v64 (detect slow, track fast) ใหม่บนพื้นฐานโหมดนับ</td><td>แผนเดิมอยู่บน wip/v64 ยังไม่เสร็จ</td><td>L</td><td>Tech Lead</td><td>เจ้าของระบบยืนยันทิศทาง</td></tr>
+</table></div>
+
+<h3>12.1 รายการที่ยังไม่ยืนยัน <span class="en">UNVERIFIED list</span></h3>
+<ol>
+<li>เวอร์ชันที่ใช้งานจริงบน production (ทีมระบุเป็น v0.064 แต่เอกสารนี้ไม่ได้ตรวจจาก production)</li>
+<li>ผลบน iPhone ของ v0.064 (ทดสอบโหมดนับเป็นค่าเริ่มต้นบนโทรศัพท์ยังไม่ได้ทำ)</li>
+<li>สถานะ migration 0009 บน D1 และจำนวนแถวปัจจุบัน</li>
+<li>ผลของ tracker.test.mjs และ pond.test.mjs บน HEAD</li>
+<li>ผล eval เมื่อโหมดนับเป็นค่าเริ่มต้น (ต้องใช้ count=0 หรือไม่)</li>
+<li>เนื้อหาเต็มของ app/about.html ยังไม่ได้เทียบกับเอกสารนี้</li>
+<li>ผลของการโหลด embed parts ตอนติดตั้ง service worker ต่อหน่วยความจำและการใช้ข้อมูล</li>
+<li>ผลของโหมดนับจากวิดีโอไฟล์บน iPhone (ยังไม่มีตัวเลขจาก log)</li>
+<li>ขนาดอินพุต 312 ของ koi_det_lite16 มาจากคอมเมนต์ใน models.js ยังไม่ได้ตรวจจากไฟล์โมเดล</li>
+<li>ความตั้งใจของเส้นทางการรวมบ่อและการเขียนบล็อบผ่าน API (functions:99-121)</li>
+</ol>
+
+<!-- ============================================================ 13 -->
+<h2 id="s13"><span class="no">13</span>อภิธานศัพท์<span class="en">Glossary</span></h2>
+<div class="tw"><table>
+<tr><th>คำ (term)</th><th>ความหมายและบริบทในระบบ</th></tr>
+<tr><td>PWA (Progressive Web App)</td><td>เว็บแอปที่ติดตั้งและทำงานออฟไลน์ได้ ใช้ service worker และ manifest.webmanifest</td></tr>
+<tr><td>YOLOX-tiny</td><td>โมเดลตรวจจับวัตถุแบบ one-stage ขนาดเล็ก ใช้ในโหมดนับ อินพุต 320 px ใบอนุญาต Apache-2.0</td></tr>
+<tr><td>Object detector (ตัวตรวจจับ)</td><td>โมเดลที่หาตำแหน่งและคะแนนของวัตถุในภาพ ให้กรอบและคลาส</td></tr>
+<tr><td>Bounding box (กรอบ)</td><td>สี่เหลี่ยมที่ครอบวัตถุ เก็บเป็น cx, cy, w, h ในโค้ด</td></tr>
+<tr><td>Objectness</td><td>คะแนนว่ามีวัตถุอยู่หรือไม่ของ YOLOX ก่อนคูณด้วยคะแนนคลาส</td></tr>
+<tr><td>Letterbox (เลตเตอร์บ็อกซ์)</td><td>ย่อภาพให้พอดีกรอบจัตุรัสโดยรักษาสัดส่วน และเติมขอบ (ที่นี่เติมสีเทา 114)</td></tr>
+<tr><td>NMS (Non-Maximum Suppression)</td><td>ตัดกล่องซ้ำซ้อนให้เหลือกล่องที่คะแนนสูงสุด ที่นี่ใช้ IoU 0.6 ข้ามคลาส</td></tr>
+<tr><td>IoU (Intersection over Union)</td><td>อัตราส่วนพื้นที่ทับซ้อนต่อพื้นที่รวมของสองกล่อง ใช้จับคู่และใช้ใน NMS</td></tr>
+<tr><td>ONNX</td><td>รูปแบบโมเดลมาตรฐานเปิด ไฟล์นามสกุล .onnx</td></tr>
+<tr><td>ONNX Runtime Web (ORT)</td><td>เอนจินรันโมเดล ONNX ในเบราว์เซอร์ ไฟล์อยู่ใน app/vendor</td></tr>
+<tr><td>WebGPU</td><td>API ประมวลผลบน GPU ของเบราว์เซอร์ ใช้เป็น EP แรก</td></tr>
+<tr><td>wasm (WebAssembly)</td><td>รูปแบบโค้ดที่รันในเบราว์เซอร์บน CPU ใช้เป็นตัวสำรอง</td></tr>
+<tr><td>EP (Execution Provider)</td><td>แบ็กเอนด์ที่ ONNX Runtime ใช้รันโมเดล เช่น webgpu หรือ wasm</td></tr>
+<tr><td>Worker (Web Worker)</td><td>เธรดแยกของเบราว์เซอร์ ที่นี่ใช้รันโมเดลเพื่อไม่ให้หน้าจอค้าง</td></tr>
+<tr><td>Service worker</td><td>สคริปต์ที่ทำงานเบื้องหลังของเบราว์เซอร์ แคชไฟล์และดักคำขอ fetch</td></tr>
+<tr><td>COOP / COEP</td><td>header ที่ทำให้หน้าเป็น cross-origin isolated ซึ่งเธรดของ wasm ต้องใช้</td></tr>
+<tr><td>ImageBitmap</td><td>ภาพที่โอนความเป็นเจ้าของได้ (transferable) ส่งเข้าเวิร์กเกอร์โดยไม่คัดลอก</td></tr>
+<tr><td>OffscreenCanvas</td><td>canvas ที่วาดได้นอกหน้าจอหรือในเวิร์กเกอร์ และแปลงเป็น bitmap ได้</td></tr>
+<tr><td>requestVideoFrameCallback (rVFC)</td><td>callback ที่เรียกเมื่อวิดีโอมีเฟรมใหม่ ใช้ในลูปสดและในการรอเฟรม</td></tr>
+<tr><td>UAT (User Acceptance Test)</td><td>การทดสอบยอมรับจากผู้ใช้หรือเจ้าของระบบ ทำหลัง deploy บน production แบบอ่านอย่างเดียว</td></tr>
+<tr><td>Embedder (ตัวฝังข้อมูล)</td><td>โมเดลที่แปลงภาพปลาเป็นเวกเตอร์ตัวเลขเพื่อเทียบว่าเป็นตัวเดียวกันหรือไม่</td></tr>
+<tr><td>Re-ID (re-identification)</td><td>การระบุตัวตนซ้ำของวัตถุเดิมจากภาพใหม่</td></tr>
+<tr><td>JDE (Joint Detection and Embedding)</td><td>แนวทางรวมการตรวจจับและการสร้างเวกเตอร์ไว้ในเครือข่ายเดียว (ตัวเลือกในแผน)</td></tr>
+<tr><td>FairMOT</td><td>โมเดลติดตามหลายวัตถุที่รวมการตรวจจับกับ re-ID (ตัวเลือกในแผน)</td></tr>
+<tr><td>ByteTrack-lite</td><td>ตัวติดตามแบบเรียบง่ายที่จับคู่กรอบสองขั้นด้วย IoU</td></tr>
+<tr><td>Hungarian algorithm</td><td>การจับคู่แบบดีที่สุดระหว่างสองชุด ใช้ในตัวติดตาม</td></tr>
+<tr><td>Follow (follow.js)</td><td>การเลื่อนกรอบให้ตามปลาระหว่างรอบตรวจจับ</td></tr>
+<tr><td>embedTag</td><td>ลายนิ้วมือของโมเดลที่ใช้สร้างเวกเตอร์ ใช้ตรวจว่าคลังตัวอย่างยังเข้ากับโมเดลเดิม</td></tr>
+<tr><td>Gallery (คลังปลา)</td><td>ชุดตัวอย่างปลาของบ่อหนึ่งบ่อ พร้อมหมายเลขและชื่อ</td></tr>
+<tr><td>Pond (บ่อ)</td><td>หน่วยของคลัง ระบุด้วย id และพิกัด</td></tr>
+<tr><td>Exemplar (ตัวอย่างอ้างอิง)</td><td>ภาพหรือเวกเตอร์ของปลาหนึ่งตัวที่ใช้เทียบ</td></tr>
+<tr><td>Colour mask (มาสก์สี)</td><td>มาสก์ที่แยกลำตัวปลาจากน้ำด้วยสี ใช้ครอปในโหมด id</td></tr>
+<tr><td>D1</td><td>ฐานข้อมูล SQLite ของ Cloudflare</td></tr>
+<tr><td>R2</td><td>พื้นที่เก็บไฟล์ของ Cloudflare ระบบนี้ยกเลิกการใช้เมื่อ 30 ต.ค. 2026</td></tr>
+<tr><td>Pages Functions</td><td>ฟังก์ชันเซิร์ฟเวอร์ของ Cloudflare Pages ที่นี่อยู่ใน functions/api</td></tr>
+<tr><td>Compare-and-swap (CAS)</td><td>เขียนได้เมื่อเวอร์ชันที่อ่านมาตรงกับเวอร์ชันปัจจุบัน ใช้กับ ver ของบ่อ</td></tr>
+<tr><td>Bearer token</td><td>โทเคนในหัว Authorization ของคำขอ API</td></tr>
+<tr><td>Eval</td><td>การประเมินการนับกับคลิปที่ติดป้ายแล้ว ผ่าน eval_app.py</td></tr>
+<tr><td>Stride</td><td>ระยะก้าวของการประมวลผลในการ eval หน่วยเป็น 1/30 วินาที</td></tr>
+<tr><td>Footprint</td><td>ค่าหน่วยความจำของโปรเซสตามที่ macOS รายงาน ใช้วัด WebKit</td></tr>
+<tr><td>Safe ladder</td><td>กลไกกู้ตัวเองที่เพิ่มหรือลดระดับความปลอดภัยตามการตายของรอบก่อน</td></tr>
+<tr><td>LEAN</td><td>โหมดเบาสำหรับ iPhone ใช้ koi_det_lite16 และ batch 2</td></tr>
+<tr><td>COUNT / IDS</td><td>โหมดนับ (ค่าเริ่มต้น) และโหมดระบุตัวปลา (id=1)</td></tr>
+<tr><td>Field log</td><td>บันทึกจากอุปกรณ์จริงที่ส่งเข้าตาราง logs ของ D1</td></tr>
+<tr><td>Google Colab</td><td>สภาพแวดล้อมเทรนของ Google ที่เป็นค่าเริ่มต้นของการเทรนและ eval</td></tr>
+<tr><td>AGPL (Ultralytics)</td><td>ใบอนุญาตที่หลีกเลี่ยง เพราะต้องเปิดซอร์สและมีข้อจำกัดเชิงพาณิชย์</td></tr>
+<tr><td>Apache-2.0</td><td>ใบอนุญาตโอเพนซอร์สที่ระบบจะใช้เมื่อเปิดซอร์ส</td></tr>
+<tr><td>PDPA</td><td>กฎหมายคุ้มครองข้อมูลส่วนบุคคลของไทย ใช้เป็นกรอบเรื่องพิกัดและข้อมูลอุปกรณ์</td></tr>
+<tr><td>Code point</td><td>หน่วยอักขระของ Unicode ใช้นับความยาวชื่อปลา</td></tr>
+<tr><td>ver</td><td>เลขเวอร์ชันของคลังบ่อใน D1</td></tr>
+<tr><td>autoCount, photoRun, quiet</td><td>ชื่อฟังก์ชันและพารามิเตอร์ในโค้ด: วงจรนับ, ประมวลผลภาพหนึ่งภาพ, โหมดไม่ส่ง event รายรอบ</td></tr>
+<tr><td>autoKeep, autoGen, photoBusy</td><td>ชื่อตัวแปรในโค้ด: เก็บสตรีมไว้ระหว่างรอบ, เลขรุ่นของวงจรนับ (ใช้หยุดรอบเก่า), ธงกันการประมวลผลซ้อน</td></tr>
+</table></div>
+
+<!-- ============================================================ 14 -->
+<h2 id="s14"><span class="no">14</span>ดัชนีไฟล์<span class="en">File index</span></h2>
+<p>เส้นทางทั้งหมดอ้างอิงจากรากรีโพ</p>
+<div class="tw"><table>
+<tr><th>เส้นทาง</th><th>หน้าที่</th><th>หมายเหตุ</th></tr>
+<tr><td><code>HANDOFF.md</code></td><td>สถานะปัจจุบัน ประวัติการทดสอบ และกับดัก</td><td>แหล่งความจริงของสถานะ อ่านส่วน CHECKPOINT ก่อน</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td>กฎของโปรเจกต์สำหรับผู้ช่วยเขียนโค้ด</td><td>ตัวกฎยังใช้ได้</td></tr>
+<tr><td><code>SETUP.md</code></td><td>ตั้งค่าเครื่องใหม่ ความลับ และ deploy</td><td>ยังไม่มี count=0 ในคำสั่ง eval</td></tr>
+<tr><td><code>docs/claude/</code></td><td>ทิศทางของเจ้าของระบบ บันทึกกับดัก iPhone และแผน v64</td><td>ทิศทางและแผนเดิม</td></tr>
+<tr><td><code>docs/dev/manual_src.html</code></td><td>ต้นฉบับของคู่มือนี้</td><td>แก้ไฟล์นี้แล้วสร้างใหม่</td></tr>
+<tr><td><code>docs/dev/build_manual.py</code></td><td>สร้างคู่มือ ฝังภาพ และตรวจอักขระต้องห้าม</td><td>รันด้วย train/.venv/bin/python -I</td></tr>
+<tr><td><code>docs/dev/facts.md</code>, <code>docs/dev/img/</code></td><td>ข้อเท็จจริงฉบับเต็มสำหรับคู่มือ และภาพหน้าจอ</td><td>ใช้ตรวจย้อนกลับ</td></tr>
+<tr><td><code>docs/Koi_ID_Developer_Manual.html</code></td><td>ผลลัพธ์ของคู่มือนี้ (ไฟล์เดียว ฝังภาพ)</td><td>ไฟล์ที่ผู้อ่านเปิด</td></tr>
+<tr><td><code>docs/public/SECURITY_REVIEW.md</code></td><td>รายงานทบทวนความปลอดภัยก่อนเปิดซอร์ส</td><td>ต้องอ่านก่อนแตะ API</td></tr>
+<tr><td><code>app/index.html</code></td><td>DOM และ CSS ของหน้าหลัก</td><td>ลิงก์คู่มือรุ่นก่อนที่บรรทัด 133</td></tr>
+<tr><td><code>app/app.js</code></td><td>UI และการจัดการทั้งหมดในหน้าเว็บ</td><td>ไฟล์หลักที่สุด 1,390 บรรทัด</td></tr>
+<tr><td><code>app/engine.js</code>, <code>app/worker.js</code></td><td>ตัวจัดการเวิร์กเกอร์และจุดเข้าของเวิร์กเกอร์</td><td>ดูหัวข้อ 2 และ 4</td></tr>
+<tr><td><code>app/pipeline.js</code>, <code>app/models.js</code></td><td>ไปป์ไลน์รายเฟรม และการโหลดกับเรียกโมเดล</td><td>ดูหัวข้อ 7</td></tr>
+<tr><td><code>app/reid.js</code></td><td>ตัวตนปลา คลัง การตั้งชื่อ และการเก็บใน IndexedDB</td><td>ไฟล์ใหญ่ 729 บรรทัด</td></tr>
+<tr><td><code>app/tracker.js</code>, <code>app/follow.js</code></td><td>ตัวติดตามและการเลื่อนกรอบ</td><td>ไม่ได้ใช้ในวงจรนับ</td></tr>
+<tr><td><code>app/samples.js</code>, <code>app/sync.js</code></td><td>ข้อมูลตัวอย่างในเครื่อง และไคลเอนต์ API</td><td>ดูหัวข้อ 9</td></tr>
+<tr><td><code>app/sw.js</code></td><td>service worker แคชและ header</td><td>CACHE บรรทัด 2 MODELS บรรทัด 5</td></tr>
+<tr><td><code>app/about.html</code></td><td>คู่มือรุ่นก่อนที่หน้าแรกลิงก์ไว้</td><td>ดูหัวข้อ 12 ข้อ 10</td></tr>
+<tr><td><code>app/vendor/</code>, <code>app/models/</code></td><td>ONNX Runtime Web และไฟล์ส่วนของโมเดล</td><td>ไฟล์เต็มอยู่ใน GitHub Release</td></tr>
+<tr><td><code>app/manifest.webmanifest</code>, <code>app/icon.svg</code>, <code>app/icons/</code></td><td>ข้อมูลการติดตั้ง PWA และไอคอน</td><td>ใช้ตอนติดตั้งลงหน้าจอ</td></tr>
+<tr><td><code>app/dev/</code>, <code>app/*.test.mjs</code></td><td>หน้าทดสอบและเทสต์ node</td><td>ไม่ถูก deploy</td></tr>
+<tr><td><code>functions/api/[[path]].js</code></td><td>API ทั้งหมดของ Pages Functions</td><td>ดูหัวข้อ 9</td></tr>
+<tr><td><code>migrations/0001_init.sql</code> ถึง <code>0009_blobs.sql</code></td><td>สคีมาของ D1 เรียงตามหมายเลข</td><td>ดูหัวข้อ 9.3</td></tr>
+<tr><td><code>wrangler.toml</code></td><td>ชื่อ Pages project, โฟลเดอร์ output และ binding D1</td><td>ไม่มี R2 binding และไม่มี routes</td></tr>
+<tr><td><code>deploy.sh</code></td><td>ตรวจ MODELS คัดลอก app/ และ deploy</td><td>ดูหัวข้อ 10</td></tr>
+<tr><td><code>scripts/fetch_artifacts.sh</code></td><td>ดึงไฟล์ใหญ่จาก GitHub Release</td><td>ราว 580 MB</td></tr>
+<tr><td><code>scripts/uat_vm.py</code></td><td>UAT แบบอ่านอย่างเดียวบน VM</td><td>ใช้ wasm ช้า</td></tr>
+<tr><td><code>scripts/browser_orphans.sh</code>, <code>scripts/koi_cleanup.sh</code></td><td>แสดงรายการโปรเซส browser และเครื่องมือล้าง</td><td>ดูหัวข้อ 10.2</td></tr>
+<tr><td><code>scripts/make_public.sh</code></td><td>สร้างโฟลเดอร์ export สาธารณะ ไม่ push</td><td>ดูหัวข้อ 12 ข้อ 12</td></tr>
+<tr><td><code>public/</code></td><td>ไฟล์ของรีโพสาธารณะ: LICENSE, NOTICE, README, CONTRIBUTING, SECURITY</td><td>ไม่อยู่ใน deploy</td></tr>
+<tr><td><code>train/</code></td><td>eval_app.py, eval_summary.py, release_gate.py, split_models.py, requirements.txt และ .venv</td><td>.venv ไม่อยู่ใน git</td></tr>
+<tr><td><code>pending/yolox/</code></td><td>ตัวฝึก YOLOX และ count_check.py</td><td>ส่วนนี้จะถูก export ไปที่ train/yolox</td></tr>
+<tr><td><code>pending/yxid/</code></td><td>งานวิจัยการระบุตัวปลา (REPORT.md)</td><td>ผลวิจัยสำคัญ ดูหัวข้อ 12 ข้อ 5-7</td></tr>
+<tr><td><code>pending/v59/mem_gpu.py</code></td><td>วัดหน่วยความจำแบบ footprint บน Mac</td><td>ก่อนอ้างว่าแก้หน่วยความจำได้</td></tr>
+<tr><td><code>pending/fishdb/</code></td><td>ข้อมูลปลาและงานฐานข้อมูลปลา</td><td>ข้อมูลส่วนนี้ไม่ถูก export</td></tr>
+<tr><td><code>auto_evolve.sh</code></td><td>สคริปต์พัฒนาตัวเองรายสัปดาห์</td><td>ปิดไว้ตั้งแต่ 26 ต.ค.</td></tr>
+</table></div>
+
+<footer>
+  <p>คู่มือนี้สร้างจาก <code>docs/dev/manual_src.html</code> ด้วย <code>docs/dev/build_manual.py</code> อ้างอิง commit 17bc76d และบันทึก HANDOFF ณ 1 พ.ย. 2026 ตัวเลขทุกค่ามีแหล่งอ้างอิงในหัวข้อนั้น ค่าที่ยังไม่ยืนยันอยู่ในหัวข้อ 12.1</p>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

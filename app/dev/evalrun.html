@@ -1,0 +1,109 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Koi eval runner</title>
+<!-- In-browser eval_app.py + eval_summary.py + robust_gate.py, for machines without a usable GPU (the Linux VM): serve
+     app/ (with clips in models/) on HTTPS, open this page in a real browser and read #out when the title says DONE.
+     ?a=embB=0&b=embB=2&strides=10,30,8,9,11,12&clips=clipA,clipB&det=koi_det_lite16
+     a, b: extra app params of the two builds compared (base, candidate); common: params for both (max=3 for a smoke test). Per stride and clip: metrics, frames whose
+     data differ (timing fields aside), then the robust gate over strides 8-12 when all ran. -->
+<style>body{font:13px ui-monospace,monospace;margin:12px}iframe{width:1280px;height:1100px;border:1px solid #888;transform:scale(.35);transform-origin:0 0}#wrap{height:390px;overflow:hidden}</style>
+<p id="prog">starting</p>
+<pre id="out"></pre>
+<div id="wrap"><iframe id="app"></iframe></div>
+<script type="module">
+const Q = new URLSearchParams(location.search);
+const A = Q.get('a') ?? 'embB=0', B = Q.get('b') ?? 'embB=2', DET = Q.get('det') || 'koi_det_lite16', COMMON = Q.get('common') || '';
+const STRIDES = (Q.get('strides') || '10,30,8,9,11,12').split(',').map(Number), CLIPS = (Q.get('clips') || 'clipA,clipB').split(',');
+const GATE = [8, 9, 10, 11, 12], SKIP = new Set(['ms', 'tDet', 'tEmb', 'at', 'backend']);
+const $ = s => document.querySelector(s), frame = $('#app'), lines = [], res = {};
+const say = s => { lines.push(s); $('#out').textContent = lines.join('\n'); };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const strip = v => Array.isArray(v) ? v.map(strip) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).filter(([k]) => !SKIP.has(k)).map(([k, x]) => [k, strip(x)])) : v;
+const hash = async v => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(v)))), b => b.toString(16).padStart(2, '0')).join('').slice(0, 12);
+const median = a => { const s = [...a].sort((x, y) => x - y), n = s.length; return n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : NaN; };
+const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+const sd = a => a.length > 1 ? Math.sqrt(a.reduce((x, y) => x + (y - mean(a)) ** 2, 0) / (a.length - 1)) : 0;
+
+// clips as blob URLs: seeking needs Range requests, which Cloudflare Pages does not answer for these files
+const blobs = {};
+const clipUrl = async clip => blobs[clip] ||= URL.createObjectURL(await (await fetch(`/models/${clip}.mp4`)).blob());
+let runNo = 0;
+
+// one app run in the iframe -> eval_app.py's data, error count
+async function run(clip, stride, extra) {
+  try { localStorage.setItem('koi.safe', '0'); localStorage.removeItem('koi.stage'); } catch {}
+  const tag = `&evalrun=${++runNo}`, url = `/?video=${encodeURIComponent(await clipUrl(clip))}&mode=every&dump=1&stride=${stride}&det=${DET}&${extra}${COMMON && '&' + COMMON}${tag}`;
+  let errs = 0, seen = false;
+  frame.src = 'about:blank';
+  while (frame.contentWindow?.location.href !== 'about:blank') await sleep(10);
+  frame.src = url;
+  const t0 = Date.now();
+  for (;;) {
+    await sleep(seen ? 2000 : 1);
+    if (Date.now() - t0 > 1800e3) { errs++; say(`!! ${clip} s${stride} ${extra}: timeout`); break; }
+    const w = frame.contentWindow;
+    if (!w?.location.href.endsWith(tag)) continue;
+    // hook each new document (an app reload too) before its module scripts run (they load asynchronously)
+    if (!w.__evalHooked) {
+      w.__evalHooked = seen = true;
+      for (const k of ['error', 'warn']) { const f = w.console[k].bind(w.console); w.console[k] = (...a) => { if (a.join(' ').toLowerCase().includes('error')) errs++; f(...a); }; }
+      w.addEventListener('error', () => errs++); w.addEventListener('unhandledrejection', () => errs++);
+    }
+    const k = w.koi, st = w.document.querySelector('#status')?.textContent || '';
+    $('#prog').textContent = `${clip} s${stride} ${extra}: ${k?.stats?.frames?.length ?? 0} frames, ${Math.round((Date.now() - t0) / 1000)} s, ${st}`;
+    if (k?.stats?.done) break;
+    if (st.includes('ไม่สำเร็จ')) { errs++; say(`!! ${clip} s${stride} ${extra}: ${st}`); break; }
+  }
+  const w = frame.contentWindow, k = w.koi;
+  if (!k?.stats?.frames) return { data: { frames: [], fish: [], log: [], suggestions: [], embs: [] }, errs: errs + 1 };
+  const data = { frames: k.stats.frames, fish: [...k.id.fish.values()].map(f => ({ id: f.id, name: f.name, variety: f.variety, ex: f.ex.length, seen: f.seen, size: f.size, hist: f.hist })),
+    log: k.id.log, suggestions: k.id.suggestions, embs: k.stats.embs };
+  return JSON.parse(JSON.stringify({ data, errs }));
+}
+
+// eval_summary.metrics for one clip's data
+function metrics(d) {
+  const F = d.frames, L = new Set();
+  F.forEach(f => f.tracks.forEach(t => L.add(t.id)));
+  const dup = f => { const ids = f.tracks.filter(t => t.fish && t.sure).map(t => t.fish); return (ids.length - new Set(ids).size) / Math.max(1, ids.length); };
+  return { frames: F.length, count: median(F.map(f => f.count || 0)), max: Math.max(...F.map(f => f.count || 0)),
+    named: mean(F.map(f => (f.named || 0) / Math.max(1, f.tracks.length))), dup: mean(F.map(dup)), tracks: L.size, fish: d.fish.length,
+    ms: median(F.map(f => f.ms)) };
+}
+const fmt = m => `frames ${m.frames} count ${m.count} max ${m.max} named ${(100 * m.named).toFixed(1)}% dup ${(100 * m.dup).toFixed(1)}% tracks ${m.tracks} fish ${m.fish} ms ${Math.round(m.ms)}`;
+
+say(`base a: ${A} | candidate b: ${B} | common ${COMMON} | det ${DET} | strides ${STRIDES} | clips ${CLIPS} | ${navigator.userAgent.slice(0, 120)}`);
+for (const s of STRIDES) for (const clip of CLIPS) {
+  const r = {};
+  for (const [v, extra] of [['a', A], ['b', B]]) {
+    const { data, errs } = await run(clip, s, extra), m = metrics(data);
+    const fh = await Promise.all(strip(data.frames).map(hash)), rest = await hash(strip({ ...data, frames: null }));
+    r[v] = { m, errs, fh, rest };
+    say(`${clip} s${s} ${v}: ${fmt(m)} errors ${errs} hash ${await hash(fh)}/${rest}`);
+  }
+  const n = Math.max(r.a.fh.length, r.b.fh.length), diff = [...Array(n).keys()].filter(i => r.a.fh[i] !== r.b.fh[i]);
+  say(`${clip} s${s} a vs b: ${diff.length ? `${diff.length}/${n} frames differ, first at ${diff[0]}` : 'all frames identical'}, fish/log/embs ${r.a.rest === r.b.rest ? 'identical' : 'DIFFER'}`);
+  res[`${clip}_${s}`] = r;
+}
+
+// robust_gate.py over strides 8-12: means, tolerance from the spread across strides
+if (GATE.every(s => STRIDES.includes(s))) {
+  let ok = true;
+  for (const clip of CLIPS) {
+    const row = [];
+    for (const [k, floor] of [['named', 0.03], ['count', 1.0]]) {
+      const vb = GATE.map(s => res[`${clip}_${s}`].a.m[k]), vc = GATE.map(s => res[`${clip}_${s}`].b.m[k]);
+      const tol = Math.max(floor, 2 * Math.sqrt(sd(vb) ** 2 / vb.length + sd(vc) ** 2 / vc.length)), good = mean(vc) >= mean(vb) - tol;
+      ok &&= good;
+      const f = k === 'named' ? v => `${(100 * v).toFixed(1)}%` : v => v.toFixed(1);
+      row.push(`${k} ${f(mean(vb))}±${f(sd(vb))} -> ${f(mean(vc))}±${f(sd(vc))} (tol ${f(tol)}) ${good ? 'ok' : 'FAIL'}`);
+    }
+    const dmax = Math.max(...GATE.map(s => res[`${clip}_${s}`].b.m.dup)), errs = GATE.reduce((x, s) => x + res[`${clip}_${s}`].b.errs, 0);
+    ok &&= dmax <= 0.02 && errs === 0;
+    row.push(`sure-dup max ${(100 * dmax).toFixed(1)}% ${dmax <= 0.02 ? 'ok' : 'FAIL'}`, `errors ${errs}`);
+    say(`gate ${clip}: ${row.join(' | ')}`);
+  }
+  say(`ROBUST GATE: ${ok ? 'PASS' : 'FAIL'}`);
+}
+$('#prog').textContent = 'DONE'; document.title = 'DONE';
+</script>

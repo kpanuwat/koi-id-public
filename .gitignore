@@ -1,0 +1,15 @@
+# model weights come from GitHub Releases (scripts/fetch_models.sh), never git
+app/models/*.onnx
+app/models/*.onnx.part*
+*.mp4
+*.mov
+*.MOV
+dist/
+train/.venv/
+train/data/
+train/runs/
+__pycache__/
+.DS_Store
+.env
+.dev.vars
+node_modules/
